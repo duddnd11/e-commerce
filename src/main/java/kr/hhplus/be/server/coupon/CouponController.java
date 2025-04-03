@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name="쿠폰 API", description = "쿠폰 관련 (쿠폰 목록, 발급)")
@@ -23,6 +24,7 @@ public class CouponController {
 	 * @param userId
 	 * @return
 	 */
+	@Operation(summary = "유저 보유 쿠폰 목록")
 	@GetMapping("/list/{userId}")
 	public ResponseEntity<List<UserCouponResponse>> getCouponList(@PathVariable("userId") long userId){
 		List<UserCouponResponse> userCouponList = new ArrayList<UserCouponResponse>();
@@ -40,6 +42,7 @@ public class CouponController {
 	 * @param couponRequest
 	 * @return
 	 */
+	@Operation(summary = "선착순 쿠폰 발급")
 	@PostMapping("/issue")
 	public ResponseEntity<CouponResponse> issueCoupon(@RequestBody CouponRequest couponRequest){
 		return ResponseEntity.ok(new CouponResponse(1L, "쿠폰1", CouponType.PRICE, 2000));

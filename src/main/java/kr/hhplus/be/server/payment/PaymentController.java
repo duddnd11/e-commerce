@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name="Payment API", description = "결제 관련")
@@ -18,6 +19,7 @@ public class PaymentController {
 	 * @param paymentRequest
 	 * @return
 	 */
+	@Operation(summary = "주문 결제")
 	@PostMapping
 	public ResponseEntity<PaymentResponse> payment(@RequestBody PaymentRequest paymentRequest){
 		return ResponseEntity.ok(new PaymentResponse(1L, PaymentStatus.COMPLETED));
