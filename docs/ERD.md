@@ -109,7 +109,7 @@ erDiagram
 | id           | BIGINT    | PK (Primary Key)          | 기본 키   |
 | user_id         | BIGINT   | FK (Foreign Key)  | 유저 외래키 |
 | user_coupon_id  | BIGINT   | FK (Foreign Key)  | 유저 쿠폰 외래키 |
-| to료 일시 |
+| payment_at   | DATETIME  |                           | 결제 완료 일시 |
 | created_at   | DATETIME  |                           | 생성 일시 |
 | updated_at   | DATETIME  |                           | 수정 일시 |
 
