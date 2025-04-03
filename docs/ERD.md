@@ -109,7 +109,10 @@ erDiagram
 | id           | BIGINT    | PK (Primary Key)          | 기본 키   |
 | user_id         | BIGINT   | FK (Foreign Key)  | 유저 외래키 |
 | user_coupon_id  | BIGINT   | FK (Foreign Key)  | 유저 쿠폰 외래키 |
-| payment_at   | DATETIME  |                           | 결제 완료 일시 |
+| total_price  | INT       |  DEFAULT 0                | 주문 총 금액 |
+| final_price  | INT       |  DEFAULT 0                | 주문 최종 금액 (쿠폰 적용)|
+| status      | VARCHAR    | NOT NULL                 | 주문 상태 |
+| order_at   | DATETIME  |                           | 주문 완료 일시 |
 | created_at   | DATETIME  |                           | 생성 일시 |
 | updated_at   | DATETIME  |                           | 수정 일시 |
 
@@ -121,6 +124,16 @@ erDiagram
 | product_id   | BIGINT   | FK (Foreign Key)           | 상품 외래키 |
 | quantity     | INT       |  DEFAULT 0                | 주문 상품 수량 |
 | total_price  | INT       |  DEFAULT 0                | 주문 상품 총 금액 |
+| created_at   | DATETIME  |                           | 생성 일시 |
+| updated_at   | DATETIME  |                           | 수정 일시 |
+
+### PAYMENT
+| 컬럼 이름    | 타입      | 제약 조건                  | 설명     |
+|--------------|-----------|---------------------------|-----------|
+| id           | BIGINT    | PK (Primary Key)          | 기본 키   |
+| order_id         | BIGINT   | FK (Foreign Key)  | 주문 외래키|
+| status      | VARCHAR    | NOT NULL                 | 결제 상태 |
+| payment_at   | DATETIME  |                           | 결제 완료 일시 |
 | created_at   | DATETIME  |                           | 생성 일시 |
 | updated_at   | DATETIME  |                           | 수정 일시 |
 
