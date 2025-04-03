@@ -12,5 +12,6 @@
 docker-compose up -d
 ```
 ## 프로젝트 설계
+[마일스톤](https://github.com/users/duddnd11/projects/3/views/3) <br/><br/>
 [시퀀스 다이어그램](./docs/시퀀스다이어그램.md) <br/><br/>
 [ERD](./docs/ERD.md)
