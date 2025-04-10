@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.application.PaymentFacade;
+import kr.hhplus.be.server.application.payment.PaymentFacade;
 import kr.hhplus.be.server.domain.payment.Payment;
 import lombok.RequiredArgsConstructor;
 

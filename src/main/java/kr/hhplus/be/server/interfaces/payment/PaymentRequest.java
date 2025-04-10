@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.interfaces.payment;
 
-import kr.hhplus.be.server.application.PaymentCriteria;
+import kr.hhplus.be.server.application.payment.PaymentCriteria;
 import lombok.Getter;
 
 @Getter
