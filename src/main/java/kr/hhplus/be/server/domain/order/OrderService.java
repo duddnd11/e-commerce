@@ -23,8 +23,8 @@ public class OrderService {
 		return order;
 	}
 
-	public void orderSuccess(OrderSuccess orderSuccess) {
-		Order order = orderRepository.findById(orderSuccess.getOrderId());
+	public void orderSuccess(OrderResult orderResult) {
+		Order order = orderRepository.findById(orderResult.getOrderId());
 		order.success();
 	}
 	
@@ -32,5 +32,10 @@ public class OrderService {
 		Order order = orderRepository.findById(orderDiscount.getOrderId());
 		order.discount(orderDiscount);
 		return order;
+	}
+
+	public void cancel(OrderResult orderResult) {
+		Order order = orderRepository.findById(orderResult.getOrderId());
+		order.cancel();
 	}
 }

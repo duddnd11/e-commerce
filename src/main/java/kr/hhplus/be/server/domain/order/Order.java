@@ -58,4 +58,8 @@ public class Order {
 		this.status = OrderStatus.CONFIRMED;
 		this.orderAt = LocalDateTime.now();
 	}
+
+	public void cancel() {
+		this.status = OrderStatus.CANCELED;
+	}
 }
