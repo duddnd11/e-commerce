@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.interfaces.order;
 
-import kr.hhplus.be.server.application.OrderDetailCriteria;
+import kr.hhplus.be.server.application.order.OrderDetailCriteria;
 import lombok.Getter;
 
 @Getter
