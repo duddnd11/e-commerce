@@ -1,7 +1,14 @@
-package kr.hhplus.be.server.domain.coupon;
+package kr.hhplus.be.server.domain.coupon.service;
 
 import org.springframework.stereotype.Service;
 
+import kr.hhplus.be.server.domain.coupon.dto.CouponCommand;
+import kr.hhplus.be.server.domain.coupon.dto.DiscountCommand;
+import kr.hhplus.be.server.domain.coupon.entity.Coupon;
+import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
+import kr.hhplus.be.server.domain.coupon.enums.CouponType;
+import kr.hhplus.be.server.domain.coupon.repository.CouponRepository;
+import kr.hhplus.be.server.domain.coupon.repository.UserCouponRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service

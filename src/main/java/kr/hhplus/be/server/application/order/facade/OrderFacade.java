@@ -7,9 +7,9 @@ import org.springframework.stereotype.Service;
 
 import kr.hhplus.be.server.application.order.dto.OrderCriteria;
 import kr.hhplus.be.server.application.order.dto.OrderDetailCriteria;
-import kr.hhplus.be.server.domain.coupon.CouponService;
-import kr.hhplus.be.server.domain.coupon.DiscountCommand;
-import kr.hhplus.be.server.domain.coupon.UserCoupon;
+import kr.hhplus.be.server.domain.coupon.dto.DiscountCommand;
+import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
+import kr.hhplus.be.server.domain.coupon.service.CouponService;
 import kr.hhplus.be.server.domain.order.dto.OrderDetailCommand;
 import kr.hhplus.be.server.domain.order.dto.OrderDiscount;
 import kr.hhplus.be.server.domain.order.entity.Order;

@@ -1,5 +1,6 @@
-package kr.hhplus.be.server.domain.coupon;
+package kr.hhplus.be.server.domain.coupon.repository;
 
+import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
 import kr.hhplus.be.server.domain.user.entity.User;
 
 public interface UserCouponRepository {

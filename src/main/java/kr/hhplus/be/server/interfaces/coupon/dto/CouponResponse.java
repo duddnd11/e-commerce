@@ -2,7 +2,7 @@ package kr.hhplus.be.server.interfaces.coupon.dto;
 
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import kr.hhplus.be.server.domain.coupon.CouponType;
+import kr.hhplus.be.server.domain.coupon.enums.CouponType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
