@@ -11,9 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.domain.product.Product;
-import kr.hhplus.be.server.domain.product.ProductCommand;
-import kr.hhplus.be.server.domain.product.ProductService;
+import kr.hhplus.be.server.domain.product.dto.ProductCommand;
+import kr.hhplus.be.server.domain.product.entity.Product;
+import kr.hhplus.be.server.domain.product.service.ProductService;
+import kr.hhplus.be.server.interfaces.product.dto.ProductResponse;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name="Product API", description = "상품 관리 (조회, 상위 상품 조회)")

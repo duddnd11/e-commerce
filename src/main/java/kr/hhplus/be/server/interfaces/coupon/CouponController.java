@@ -17,6 +17,8 @@ import kr.hhplus.be.server.domain.coupon.CouponService;
 import kr.hhplus.be.server.domain.coupon.CouponType;
 import kr.hhplus.be.server.domain.coupon.UserCoupon;
 import kr.hhplus.be.server.domain.coupon.UserCouponStatus;
+import kr.hhplus.be.server.interfaces.coupon.dto.CouponRequest;
+import kr.hhplus.be.server.interfaces.coupon.dto.UserCouponResponse;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name="쿠폰 API", description = "쿠폰 관련 (쿠폰 목록, 발급)")

@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.domain.coupon;
 
-import kr.hhplus.be.server.domain.user.User;
+import kr.hhplus.be.server.domain.user.entity.User;
 
 public interface UserCouponRepository {
 	UserCoupon save(UserCoupon userCoupon);

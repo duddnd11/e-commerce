@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.domain.user.BalanceCommand;
-import kr.hhplus.be.server.domain.user.User;
-import kr.hhplus.be.server.domain.user.UserService;
+import kr.hhplus.be.server.domain.user.dto.BalanceCommand;
+import kr.hhplus.be.server.domain.user.entity.User;
+import kr.hhplus.be.server.domain.user.service.UserService;
+import kr.hhplus.be.server.interfaces.user.dto.UserBalanceResponse;
+import kr.hhplus.be.server.interfaces.user.dto.UserChargeRequest;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name="User API", description = "유저 관리 (잔액 조회 및 충전)")

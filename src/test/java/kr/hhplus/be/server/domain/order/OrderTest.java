@@ -9,12 +9,12 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import kr.hhplus.be.server.domain.order.Order;
-import kr.hhplus.be.server.domain.order.OrderCommand;
-import kr.hhplus.be.server.domain.order.OrderDetail;
-import kr.hhplus.be.server.domain.order.OrderDetailCommand;
-import kr.hhplus.be.server.domain.order.OrderDiscount;
-import kr.hhplus.be.server.domain.order.OrderStatus;
+import kr.hhplus.be.server.domain.order.dto.OrderCommand;
+import kr.hhplus.be.server.domain.order.dto.OrderDetailCommand;
+import kr.hhplus.be.server.domain.order.dto.OrderDiscount;
+import kr.hhplus.be.server.domain.order.entity.Order;
+import kr.hhplus.be.server.domain.order.entity.OrderDetail;
+import kr.hhplus.be.server.domain.order.enums.OrderStatus;
 
 public class OrderTest {
 	

@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.application.order.OrderFacade;
+import kr.hhplus.be.server.application.order.facade.OrderFacade;
+import kr.hhplus.be.server.interfaces.order.dto.OrderRequest;
+import kr.hhplus.be.server.interfaces.order.dto.OrderResponse;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name="Order API", description = "주문 관련")

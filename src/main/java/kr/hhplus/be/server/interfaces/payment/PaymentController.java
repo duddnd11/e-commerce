@@ -8,8 +8,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.application.payment.PaymentFacade;
-import kr.hhplus.be.server.domain.payment.Payment;
+import kr.hhplus.be.server.application.payment.facade.PaymentFacade;
+import kr.hhplus.be.server.domain.payment.entity.Payment;
+import kr.hhplus.be.server.interfaces.payment.dto.PaymentRequest;
+import kr.hhplus.be.server.interfaces.payment.dto.PaymentResponse;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name="Payment API", description = "결제 관련")
