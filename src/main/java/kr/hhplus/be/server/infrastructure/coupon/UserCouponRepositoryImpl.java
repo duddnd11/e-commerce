@@ -18,7 +18,7 @@ public class UserCouponRepositoryImpl implements UserCouponRepository{
 
 	@Override
 	public UserCoupon findById(Long userCouponId) {
-		return jpaRepository.findById(userCouponId).orElseThrow();
+		return jpaRepository.findById(userCouponId).orElseThrow(() -> new IllegalArgumentException("유저 쿠폰을 찾을 수 없습니다."));
 	}
 
 	@Override

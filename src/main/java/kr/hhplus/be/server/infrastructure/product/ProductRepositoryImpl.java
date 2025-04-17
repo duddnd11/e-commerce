@@ -14,7 +14,7 @@ public class ProductRepositoryImpl implements ProductRepository{
 
 	@Override
 	public Product findById(long productId) {
-		return jpaRepository.findById(productId).orElseThrow();
+		return jpaRepository.findById(productId).orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
 	}
 
 	@Override

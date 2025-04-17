@@ -18,7 +18,7 @@ public class UserRepositoryImpl implements UserRepository{
 
 	@Override
 	public User findById(Long userId) {
-		return jpaRepository.findById(userId).orElseThrow();
+		return jpaRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("유저 정보를 찾을 수 없습니다."));
 	}
 
 }

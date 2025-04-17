@@ -18,6 +18,6 @@ public class OrderRepositoryImpl implements OrderRepository{
 
 	@Override
 	public Order findById(long orderId) {
-		return jpaRepository.findById(orderId).orElseThrow();
+		return jpaRepository.findById(orderId).orElseThrow(() -> new IllegalArgumentException("주문 내역을 찾을 수 없습니다."));
 	}
 }

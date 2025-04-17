@@ -13,7 +13,7 @@ public class CouponRepositoryImpl implements CouponRepository{
 	
 	@Override
 	public Coupon findById(long couponId) {
-		return jpaRepository.findById(couponId).orElseThrow();
+		return jpaRepository.findById(couponId).orElseThrow(() -> new IllegalArgumentException("쿠폰을 찾을 수 없습니다."));
 	}
 
 	@Override
