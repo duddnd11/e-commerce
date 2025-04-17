@@ -43,8 +43,16 @@ public class Product {
 			throw new IllegalArgumentException("재고가 부족합니다.");
 		}
 		
-		
 		this.stock -= quantity;
+		this.updatedAt = LocalDateTime.now();
+	}
+	
+	public void addStock(int quantity) {
+		if(quantity <= 0) {
+			throw new IllegalArgumentException("0 이상의 수량을 입력해 주세요.");
+		}
+		
+		this.stock += quantity;
 		this.updatedAt = LocalDateTime.now();
 	}
 }
