@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 
 import kr.hhplus.be.server.domain.coupon.dto.CouponCommand;
 import kr.hhplus.be.server.domain.coupon.dto.DiscountCommand;
+import kr.hhplus.be.server.domain.coupon.dto.UserCouponCommand;
 import kr.hhplus.be.server.domain.coupon.entity.Coupon;
 import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
 import kr.hhplus.be.server.domain.coupon.enums.CouponType;
@@ -40,6 +41,16 @@ public class CouponService {
 			return coupon.getValue();
 		}else {
 			return discountCommand.getTotalPrice() * coupon.getValue() / 100; 
+		}
+	}
+	
+	public UserCoupon cancel(UserCouponCommand userCouponCommand) {
+		if(userCouponCommand.getUserCouponId() != null) {
+			UserCoupon userCoupon = userCouponRepository.findById(userCouponCommand.getUserCouponId());
+			userCoupon.cancel();
+			return userCoupon;
+		}else {
+			return null;
 		}
 	}
 }
