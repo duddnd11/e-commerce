@@ -15,7 +15,7 @@ import kr.hhplus.be.server.domain.order.enums.OrderStatus;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Entity
+@Entity(name="Orders")
 @Getter
 @NoArgsConstructor
 public class Order {
@@ -40,12 +40,9 @@ public class Order {
 	
 	private LocalDateTime updatedAt;
 	
-	public Order(OrderCommand orderCommand) {
-		this.userId = orderCommand.getUserId();
-		for (OrderDetailCommand orderDetailCommand : orderCommand.getOrderDetailCommands()) {
-			this.totalPrice += orderDetailCommand.getPrice() * orderDetailCommand.getQuantity();
-		}
-		
+	public Order(Long userId, int totalPrice) {
+		this.userId = userId;
+		this.totalPrice = totalPrice;
 		this.status = OrderStatus.PENDING;
 		this.createdAt = LocalDateTime.now();
 	}
