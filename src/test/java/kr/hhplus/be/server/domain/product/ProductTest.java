@@ -43,4 +43,27 @@ public class ProductTest {
 		// when & then
 		assertThrows(IllegalArgumentException.class, () -> product.deductStock(0));
 	}
+	
+	@Test
+	@DisplayName("재고 추가")
+	void addStock() {
+		// given
+		Product product = new Product("모니터", 100000, 100);
+		
+		// when
+		product.addStock(100);
+		
+		//then
+		assertThat(product.getStock()).isEqualTo(200);		
+	}
+	
+	@Test
+	@DisplayName("재고 추가 수량 0 이하 에러")
+	void addStockError() {
+		// given
+		Product product = new Product("모니터", 100000, 10);
+		
+		// when & then
+		assertThrows(IllegalArgumentException.class, () -> product.addStock(0));
+	}
 }
