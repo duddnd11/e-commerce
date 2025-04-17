@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.domain.order;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -59,7 +60,6 @@ public class OrderServiceTest {
 	        ReflectionTestUtils.setField(savedOrder, "id", 1L); // id 설정
 	        return savedOrder;
 	    });
-
 		
 		// when
 		Order resultOrder = orderService.createOrder(orderCommand);
@@ -67,5 +67,15 @@ public class OrderServiceTest {
 		// then
 		assertThat(resultOrder.getTotalPrice()).isEqualTo(21000);
 		verify(orderDetailRepository, times(3)).save(any());
+	}
+	
+	@Test
+	@DisplayName("상품 누락 주문 실패")
+	void orderFail() {
+		// given
+		OrderCommand orderCommand  = new OrderCommand(1L,null);
+		
+		// when & then
+		assertThrows(IllegalArgumentException.class, () -> orderService.createOrder(orderCommand));
 	}
 }

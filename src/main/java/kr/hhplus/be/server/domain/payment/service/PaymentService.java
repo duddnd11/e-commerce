@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
-	private PaymentRepository paymentRepository;
+	private final PaymentRepository paymentRepository;
 	
 	public Payment createPayment(PaymentCommand paymentCommand) {
 		Payment payment = new Payment(paymentCommand.getOrderId());

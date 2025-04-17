@@ -2,6 +2,8 @@ package kr.hhplus.be.server.domain.order.service;
 
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
+import kr.hhplus.be.server.domain.order.dto.OrderAction;
 import kr.hhplus.be.server.domain.order.dto.OrderCommand;
 import kr.hhplus.be.server.domain.order.dto.OrderDetailCommand;
 import kr.hhplus.be.server.domain.order.dto.OrderDiscount;
@@ -19,8 +21,15 @@ public class OrderService {
 	private final OrderRepository orderRepository;
 	private final OrderDetailRepository orderDetailRepository;
 	
+	@Transactional
 	public Order createOrder(OrderCommand orderCommand) {
-		Order order = new Order(orderCommand);
+		if (orderCommand.getOrderDetailCommands() == null) throw new IllegalArgumentException("주문 상품 목록이 없습니다.");
+		
+		int totalPrice = orderCommand.getOrderDetailCommands().stream()
+		        .mapToInt(c -> c.getPrice() * c.getQuantity())
+		        .sum();
+		
+		Order order = new Order(orderCommand.getUserId(), totalPrice);
 		orderRepository.save(order);
 		
 		for(OrderDetailCommand orderDetailCommand : orderCommand.getOrderDetailCommands()) {
@@ -31,8 +40,8 @@ public class OrderService {
 		return order;
 	}
 
-	public void orderSuccess(OrderResult orderResult) {
-		Order order = orderRepository.findById(orderResult.getOrderId());
+	public void orderSuccess(OrderAction orderAction) {
+		Order order = orderRepository.findById(orderAction.getOrderId());
 		order.success();
 	}
 	
@@ -42,8 +51,9 @@ public class OrderService {
 		return order;
 	}
 
-	public void cancel(OrderResult orderResult) {
-		Order order = orderRepository.findById(orderResult.getOrderId());
+	public OrderResult cancel(OrderAction orderAction) {
+		Order order = orderRepository.findById(orderAction.getOrderId());
 		order.cancel();
+		return OrderResult.of(order.getId(), order.getUserCouponId(), orderDetailRepository.findByOrderId(order.getId()));
 	}
 }

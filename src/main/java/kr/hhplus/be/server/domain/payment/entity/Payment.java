@@ -10,9 +10,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import kr.hhplus.be.server.domain.payment.enums.PaymentStatus;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@NoArgsConstructor
 public class Payment {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
