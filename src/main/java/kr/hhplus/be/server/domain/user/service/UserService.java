@@ -19,14 +19,12 @@ public class UserService {
 	public User charge(BalanceCommand balanceCommand) {
 		User user = userRepository.findById(balanceCommand.getUserId());
 		user.chargeBalance(balanceCommand.getAmount());
-		userRepository.save(user);
 		return user;
 	}
 	
 	public User useBalance(BalanceCommand balanceCommand) {
 		User user = userRepository.findById(balanceCommand.getUserId());
 		user.useBalance(balanceCommand.getAmount());
-		userRepository.save(user);
 		return user;
 	}
 }
