@@ -6,17 +6,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.application.order.dto.OrderCriteria;
 import kr.hhplus.be.server.application.order.dto.OrderDetailCriteria;
 import kr.hhplus.be.server.application.order.facade.OrderFacade;
@@ -31,9 +33,11 @@ import kr.hhplus.be.server.domain.order.entity.OrderDetail;
 import kr.hhplus.be.server.domain.order.repository.OrderDetailRepository;
 import kr.hhplus.be.server.domain.product.entity.Product;
 import kr.hhplus.be.server.domain.product.repository.ProductRepository;
+import lombok.extern.slf4j.Slf4j;
 
 @SpringBootTest
 @Testcontainers
+@Slf4j
 public class OrderFacadeInterTest {
 	
 	@Autowired
@@ -54,21 +58,8 @@ public class OrderFacadeInterTest {
 	@Autowired
 	EntityManager em;
 
-	@BeforeEach
-	void clearTables() {
-	    em.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
-	    em.createNativeQuery("TRUNCATE TABLE product").executeUpdate();
-	    em.createNativeQuery("TRUNCATE TABLE order_detail").executeUpdate();
-	    em.createNativeQuery("TRUNCATE TABLE coupon").executeUpdate();
-	    em.createNativeQuery("TRUNCATE TABLE user_coupon").executeUpdate();
-	    em.createNativeQuery("TRUNCATE TABLE orders").executeUpdate();
-	    em.createNativeQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();
-	}
-	
 	@Test
 	@DisplayName("주문 성공")
-	@Transactional
-	@Rollback
 	void order() {
 		// given
 		Product product1 = new Product("상품1", 1000, 100);
@@ -77,8 +68,8 @@ public class OrderFacadeInterTest {
 		productRepository.save(product2);
 		
 		List<OrderDetailCriteria> orderDetails = new ArrayList<OrderDetailCriteria>();
-		OrderDetailCriteria orderDetailCriteria1 = new OrderDetailCriteria(1L, 10);
-		OrderDetailCriteria orderDetailCriteria2 = new OrderDetailCriteria(2L, 3);
+		OrderDetailCriteria orderDetailCriteria1 = new OrderDetailCriteria(product1.getId(), 10);
+		OrderDetailCriteria orderDetailCriteria2 = new OrderDetailCriteria(product2.getId(), 3);
 		orderDetails.add(orderDetailCriteria1);
 		orderDetails.add(orderDetailCriteria2);
 		OrderCriteria orderCriteria = new OrderCriteria(1L, 0L, orderDetails);
@@ -95,21 +86,19 @@ public class OrderFacadeInterTest {
 		assertThat(orderDetail).hasSize(2);
 		assertThat(orderDetail).extracting("productId", "quantity", "totalPrice")
 								.containsExactly(
-								        tuple(1L, 10, 10000),
-								        tuple(2L, 3, 6000)
+								        tuple(product1.getId(), 10, 10000),
+								        tuple(product2.getId(), 3, 6000)
 								        );
 		
 		// 상품 재고 확인
-		Product resultProduct1 = productRepository.findById(1L);
-		Product resultProduct2 = productRepository.findById(2L);
+		Product resultProduct1 = productRepository.findById(product1.getId());
+		Product resultProduct2 = productRepository.findById(product2.getId());
 		assertThat(resultProduct1.getStock()).isEqualTo(90);
 		assertThat(resultProduct2.getStock()).isEqualTo(67);
 	}
 	
 	@Test
 	@DisplayName("쿠폰 사용 주문 성공")
-	@Transactional
-	@Rollback
 	void orderCoupon() {
 		// given
 		Product product1 = new Product("상품1", 1000, 100);
@@ -119,15 +108,15 @@ public class OrderFacadeInterTest {
 		
 		Coupon coupon = new Coupon("쿠폰", CouponType.PRICE, 2000, 100);
 		couponRepository.save(coupon);
-		UserCoupon userCoupon = new UserCoupon(1L, 1L);
+		UserCoupon userCoupon = new UserCoupon(1L, coupon.getId());
 		userCouponRepository.save(userCoupon);
 		
 		List<OrderDetailCriteria> orderDetails = new ArrayList<OrderDetailCriteria>();
-		OrderDetailCriteria orderDetailCriteria1 = new OrderDetailCriteria(1L, 10);
-		OrderDetailCriteria orderDetailCriteria2 = new OrderDetailCriteria(2L, 3);
+		OrderDetailCriteria orderDetailCriteria1 = new OrderDetailCriteria(product1.getId(), 10);
+		OrderDetailCriteria orderDetailCriteria2 = new OrderDetailCriteria(product2.getId(), 3);
 		orderDetails.add(orderDetailCriteria1);
 		orderDetails.add(orderDetailCriteria2);
-		OrderCriteria orderCriteria = new OrderCriteria(1L, 1L, orderDetails);
+		OrderCriteria orderCriteria = new OrderCriteria(1L, userCoupon.getId(), orderDetails);
 		
 		// when
 		Order order = orderFacade.order(orderCriteria);
@@ -142,24 +131,22 @@ public class OrderFacadeInterTest {
 		assertThat(orderDetail).hasSize(2);
 		assertThat(orderDetail).extracting("productId", "quantity", "totalPrice")
 								.containsExactly(
-								        tuple(1L, 10, 10000),
-								        tuple(2L, 3, 6000)
+								        tuple(product1.getId(), 10, 10000),
+								        tuple(product2.getId(), 3, 6000)
 								        );
 		
 		// 상품 재고 확인
-		Product resultProduct1 = productRepository.findById(1L);
-		Product resultProduct2 = productRepository.findById(2L);
+		Product resultProduct1 = productRepository.findById(product1.getId());
+		Product resultProduct2 = productRepository.findById(product2.getId());
 		assertThat(resultProduct1.getStock()).isEqualTo(90);
 		assertThat(resultProduct2.getStock()).isEqualTo(67);
 		
-		UserCoupon resultUserCoupon = userCouponRepository.findById(1L);
+		UserCoupon resultUserCoupon = userCouponRepository.findById(userCoupon.getId());
 		assertThat(resultUserCoupon.getStatus()).isEqualTo(UserCouponStatus.USED);
 	}
 	
 	@Test
 	@DisplayName("퍼센트 쿠폰 사용 주문 성공")
-	@Transactional
-	@Rollback
 	void orderPercentCoupon() {
 		// given
 		Product product1 = new Product("상품1", 1000, 100);
@@ -169,15 +156,15 @@ public class OrderFacadeInterTest {
 		
 		Coupon coupon = new Coupon("쿠폰", CouponType.PERCENT, 23, 100);
 		couponRepository.save(coupon);
-		UserCoupon userCoupon = new UserCoupon(1L, 1L);
+		UserCoupon userCoupon = new UserCoupon(1L, coupon.getId());
 		userCouponRepository.save(userCoupon);
 		
 		List<OrderDetailCriteria> orderDetails = new ArrayList<OrderDetailCriteria>();
-		OrderDetailCriteria orderDetailCriteria1 = new OrderDetailCriteria(1L, 10);
-		OrderDetailCriteria orderDetailCriteria2 = new OrderDetailCriteria(2L, 3);
+		OrderDetailCriteria orderDetailCriteria1 = new OrderDetailCriteria(product1.getId(), 10);
+		OrderDetailCriteria orderDetailCriteria2 = new OrderDetailCriteria(product2.getId(), 3);
 		orderDetails.add(orderDetailCriteria1);
 		orderDetails.add(orderDetailCriteria2);
-		OrderCriteria orderCriteria = new OrderCriteria(1L, 1L, orderDetails);
+		OrderCriteria orderCriteria = new OrderCriteria(1L, userCoupon.getId(), orderDetails);
 		
 		// when
 		Order order = orderFacade.order(orderCriteria);
@@ -192,24 +179,22 @@ public class OrderFacadeInterTest {
 		assertThat(orderDetail).hasSize(2);
 		assertThat(orderDetail).extracting("productId", "quantity", "totalPrice")
 								.containsExactly(
-								        tuple(1L, 10, 10000),
-								        tuple(2L, 3, 6000)
+								        tuple(product1.getId(), 10, 10000),
+								        tuple(product2.getId(), 3, 6000)
 								        );
 		
 		// 상품 재고 확인
-		Product resultProduct1 = productRepository.findById(1L);
-		Product resultProduct2 = productRepository.findById(2L);
+		Product resultProduct1 = productRepository.findById(product1.getId());
+		Product resultProduct2 = productRepository.findById(product2.getId());
 		assertThat(resultProduct1.getStock()).isEqualTo(90);
 		assertThat(resultProduct2.getStock()).isEqualTo(67);
 		
-		UserCoupon resultUserCoupon = userCouponRepository.findById(1L);
+		UserCoupon resultUserCoupon = userCouponRepository.findById(userCoupon.getId());
 		assertThat(resultUserCoupon.getStatus()).isEqualTo(UserCouponStatus.USED);
 	}
 	
 	@Test
 	@DisplayName("재고 부족 주문 실패")
-	@Transactional
-	@Rollback
 	void orderFail() {
 		// given
 		Product product1 = new Product("상품1", 1000, 3);
@@ -219,8 +204,8 @@ public class OrderFacadeInterTest {
 		
 		
 		List<OrderDetailCriteria> orderDetails = new ArrayList<OrderDetailCriteria>();
-		OrderDetailCriteria orderDetailCriteria1 = new OrderDetailCriteria(1L, 10);
-		OrderDetailCriteria orderDetailCriteria2 = new OrderDetailCriteria(2L, 3);
+		OrderDetailCriteria orderDetailCriteria1 = new OrderDetailCriteria(product1.getId(), 10);
+		OrderDetailCriteria orderDetailCriteria2 = new OrderDetailCriteria(product2.getId(), 3);
 		orderDetails.add(orderDetailCriteria1);
 		orderDetails.add(orderDetailCriteria2);
 		OrderCriteria orderCriteria = new OrderCriteria(1L, 1L, orderDetails);
@@ -228,5 +213,133 @@ public class OrderFacadeInterTest {
 		
 		// when & then
 		assertThrows(IllegalArgumentException.class, () -> orderFacade.order(orderCriteria));
+		Product resultProduct1 = productRepository.findById(product1.getId());
+		assertThat(resultProduct1.getStock()).isEqualTo(3);
+		Product resultProduct2 = productRepository.findById(product2.getId());
+		assertThat(resultProduct2.getStock()).isEqualTo(70);
+	}
+	
+	@Test
+	@DisplayName("사용불가 쿠폰 주문 실패")
+	void orderFailCoupon() {
+		//given
+		Product product = new Product("상품1", 1000, 3);
+		productRepository.save(product);
+		
+		List<OrderDetailCriteria> orderDetails = new ArrayList<OrderDetailCriteria>();
+		OrderDetailCriteria orderDetailCriteria = new OrderDetailCriteria(product.getId(), 10);
+		orderDetails.add(orderDetailCriteria);
+		
+		Coupon coupon = new Coupon("쿠폰", CouponType.PRICE, 1000, 100);
+		couponRepository.save(coupon);
+		
+		UserCoupon userCoupon = new UserCoupon(1L, coupon.getId());
+		userCouponRepository.save(userCoupon);
+		userCoupon.use();
+		
+		OrderCriteria orderCriteria = new OrderCriteria(1L, userCoupon.getId(), orderDetails);
+		
+		// when & then
+		assertThrows(IllegalArgumentException.class, () -> orderFacade.order(orderCriteria));
+		Product resultProduct = productRepository.findById(product.getId());
+		assertThat(resultProduct.getStock()).isEqualTo(3);
+	}
+	
+	@Test
+	@DisplayName("주문 동시성 상품 재고 테스트")
+	void orderConcurrentStock() throws InterruptedException {
+		// given
+		Product product = new Product("상품1", 1000, 1000);
+		productRepository.save(product);
+		
+		List<OrderDetailCriteria> orderDetails = new ArrayList<OrderDetailCriteria>();
+		OrderDetailCriteria orderDetailCriteria = new OrderDetailCriteria(product.getId(), 3);
+		orderDetails.add(orderDetailCriteria);
+		
+		// when
+		int numberOfThread = 100;
+		CountDownLatch countDownLatch = new CountDownLatch(numberOfThread);
+		CyclicBarrier barrier = new CyclicBarrier(numberOfThread);
+		ExecutorService executorService = Executors.newFixedThreadPool(numberOfThread);
+		
+		// when
+		for (int i = 0; i < numberOfThread; i++) {
+			OrderCriteria orderCriteria = new OrderCriteria(i, 0L, orderDetails);
+		    executorService.execute(() -> {
+		        try {
+		            barrier.await();
+		            orderFacade.order(orderCriteria);
+		        } catch (Exception e) {
+		            e.printStackTrace();
+		        } finally {
+		            countDownLatch.countDown();
+		        }
+		    });
+		}
+		
+		countDownLatch.await();
+		executorService.shutdown();
+		
+		// then
+		// 상품 재고 확인
+		Product resultProduct = productRepository.findById(product.getId());
+		assertThat(resultProduct.getStock()).isEqualTo(700);
+	}
+	
+	@Test
+	@DisplayName("주문 동시성 한 사용자가 한 쿠폰을 여러번 사용하는 경우")
+	void orderConcurrentUserCopon() throws InterruptedException {
+		// given
+		Product product1 = new Product("상품1", 1000, 1000);
+		Product product2 = new Product("상품2", 2000, 2000);
+		productRepository.save(product1);
+		productRepository.save(product2);
+		
+		List<OrderDetailCriteria> orderDetails = new ArrayList<OrderDetailCriteria>();
+		OrderDetailCriteria orderDetailCriteria1 = new OrderDetailCriteria(product1.getId(), 3);
+		OrderDetailCriteria orderDetailCriteria2 = new OrderDetailCriteria(product2.getId(), 5);
+		orderDetails.add(orderDetailCriteria1);
+		orderDetails.add(orderDetailCriteria2);
+		
+		Coupon coupon = new Coupon("쿠폰", CouponType.PRICE, 1000, 100);
+		couponRepository.save(coupon);
+		
+		UserCoupon userCoupon = new UserCoupon(1L, coupon.getId());
+		userCouponRepository.save(userCoupon);
+		
+		// when
+		int numberOfThread = 2;
+		CountDownLatch countDownLatch = new CountDownLatch(numberOfThread);
+		CyclicBarrier barrier = new CyclicBarrier(numberOfThread);
+		ExecutorService executorService = Executors.newFixedThreadPool(numberOfThread);
+		
+		AtomicInteger failCount = new AtomicInteger();
+		
+		// when
+		for (int i = 0; i < numberOfThread; i++) {
+			OrderCriteria orderCriteria = new OrderCriteria(1L, userCoupon.getId(), orderDetails);
+		    executorService.execute(() -> {
+		        try {
+		            barrier.await();
+		            orderFacade.order(orderCriteria);
+		        } catch (IllegalArgumentException e) {
+		        	failCount.incrementAndGet();
+		        } catch (Exception e) {
+		            e.printStackTrace();
+		        } finally {
+		            countDownLatch.countDown();
+		        }
+		    });
+		}
+		
+		countDownLatch.await();
+		executorService.shutdown();
+		
+		// then
+		assertThat(failCount.get()).isEqualTo(1);
+		Product resultProduct1 = productRepository.findById(product1.getId());
+		assertThat(resultProduct1.getStock()).isEqualTo(997);
+		Product resultProduct2 = productRepository.findById(product2.getId());
+		assertThat(resultProduct2.getStock()).isEqualTo(1995);
 	}
 }
