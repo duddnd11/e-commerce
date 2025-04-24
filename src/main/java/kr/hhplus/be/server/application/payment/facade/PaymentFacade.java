@@ -54,7 +54,6 @@ public class PaymentFacade {
 		try{
 			return this.pay(paymentCriteria);
 		}catch (IllegalArgumentException | ObjectOptimisticLockingFailureException e) {
-//			여기로 들어오긴합니다
 			paymentRollbackFacade.rollBack(paymentCriteria);
 			return null;
 		}
