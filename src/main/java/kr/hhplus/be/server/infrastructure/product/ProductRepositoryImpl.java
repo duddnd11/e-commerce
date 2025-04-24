@@ -21,4 +21,9 @@ public class ProductRepositoryImpl implements ProductRepository{
 	public Product save(Product product) {
 		return jpaRepository.save(product);
 	}
+
+	@Override
+	public Product findByIdForUpdate(long productId) {
+		return jpaRepository.findByIdForUpdate(productId).orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+	}
 }

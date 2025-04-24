@@ -5,4 +5,5 @@ import kr.hhplus.be.server.domain.product.entity.Product;
 public interface ProductRepository {
 	Product findById(long productId);
 	Product save(Product product);
+	Product findByIdForUpdate(long productId);
 }
