@@ -1,12 +1,15 @@
 package kr.hhplus.be.server.domain.user.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import kr.hhplus.be.server.domain.user.dto.BalanceCommand;
 import kr.hhplus.be.server.domain.user.entity.User;
 import kr.hhplus.be.server.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -17,14 +20,17 @@ public class UserService {
 	}
 	
 	public User charge(BalanceCommand balanceCommand) {
+		// 동시성
 		User user = userRepository.findById(balanceCommand.getUserId());
 		user.chargeBalance(balanceCommand.getAmount());
 		return user;
 	}
 	
+	@Transactional
 	public User useBalance(BalanceCommand balanceCommand) {
 		User user = userRepository.findById(balanceCommand.getUserId());
 		user.useBalance(balanceCommand.getAmount());
+		userRepository.save(user);
 		return user;
 	}
 }

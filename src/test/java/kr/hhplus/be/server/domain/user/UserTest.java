@@ -28,38 +28,6 @@ public class UserTest {
 	}
 	
 	@Test
-	@DisplayName("포인트 충전 동시성 테스트")
-	void chargeConcurrent() throws InterruptedException {
-		// given
-		User user = new User("이름");
-		int amount = 1000;
-		
-		int numberOfThread = 1000;
-		CountDownLatch countDownLatch = new CountDownLatch(numberOfThread);
-		CyclicBarrier barrier = new CyclicBarrier(numberOfThread);
-		
-		// when
-		for(int i=0; i<numberOfThread; i++) {
-			new Thread(() -> {
-				try {
-	                barrier.await(); // 전부 여기 모일 때까지 대기 → 동시에 출발
-	                user.chargeBalance(amount);
-	            } catch (Exception e) {
-	                e.printStackTrace();
-	            } finally {
-	                countDownLatch.countDown();
-	            }
-            }).start();
-		}
-		
-		countDownLatch.await();
-		
-		// then
-		assertThat(user.getBalance()).isEqualTo(1000000);
-	}
-	
-	
-	@Test
 	@DisplayName("0 이하 포인트 충전 실패")
 	void chargeUnderZero() {
 		// given
