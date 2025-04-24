@@ -2,6 +2,7 @@ package kr.hhplus.be.server.domain.coupon.service;
 
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.coupon.dto.CouponCommand;
 import kr.hhplus.be.server.domain.coupon.dto.DiscountCommand;
 import kr.hhplus.be.server.domain.coupon.dto.UserCouponCommand;
@@ -19,7 +20,7 @@ public class CouponService {
 	private final UserCouponRepository userCouponRepository;
 	
 	public UserCoupon useCoupon(long userCouponId) {
-		UserCoupon userCoupon =  userCouponRepository.findById(userCouponId);
+		UserCoupon userCoupon = userCouponRepository.findByIdForUpdate(userCouponId);
 		userCoupon.use();
 		return userCouponRepository.save(userCoupon);
 	}
@@ -28,11 +29,12 @@ public class CouponService {
 		return couponRepository.findById(couponId);
 	}
 	
+	@Transactional
 	public UserCoupon issue(CouponCommand couponCommand) {
-		Coupon coupon = couponRepository.findById(couponCommand.getCouponId());
+		Coupon coupon = couponRepository.findByIdForUpdate(couponCommand.getCouponId());
 		coupon.issue();
 		UserCoupon userCoupon = new UserCoupon(couponCommand.getUserId(), couponCommand.getCouponId());
-		return userCoupon;
+		return userCouponRepository.save(userCoupon);
 	}
 	
 	public int calDiscountValue(DiscountCommand discountCommand) {

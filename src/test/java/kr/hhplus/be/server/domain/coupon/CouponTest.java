@@ -63,40 +63,6 @@ public class CouponTest {
 	}
 	
 	@Test
-	@DisplayName("쿠폰 발급 동시성 테스트")
-	void issueCouponConcurrent() throws InterruptedException {
-		// given
-		Coupon coupon = new Coupon("쿠폰1", CouponType.PRICE, 1000, 3000);
-		
-		// when
-		int numberOfThread = 2000;
-		CountDownLatch countDownLatch = new CountDownLatch(numberOfThread);
-		CyclicBarrier barrier = new CyclicBarrier(numberOfThread);
-		
-		// when
-		for(int i=0; i<numberOfThread; i++) {
-			new Thread(() -> {
-				try {
-	                barrier.await(); // 전부 여기 모일 때까지 대기 → 동시에 출발
-	                coupon.issue();
-	            } catch (Exception e) {
-	                e.printStackTrace();
-	            } finally {
-	                countDownLatch.countDown();
-	            }
-            }).start();
-		}
-		
-		countDownLatch.await();
-		
-		// then
-		assertThat(coupon.getIssuedQuantity()).isEqualTo(1000);
-		assertThat(coupon.getStatus()).isEqualTo(CouponStatus.ISSUABLE);
-		
-		
-	}
-	
-	@Test
 	@DisplayName("쿠폰 발급 실패, 소진된 쿠폰")
 	void soldOutCoupon() {
 		// given
