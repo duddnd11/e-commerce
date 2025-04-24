@@ -7,11 +7,11 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class DeductStockCommand {
+public class StockCommand {
 	private long productId;
 	private int quantity;
 	
-	public static DeductStockCommand of(long productId, int quantity) {
-		return new DeductStockCommand(productId, quantity);
+	public static StockCommand of(long productId, int quantity) {
+		return new StockCommand(productId, quantity);
 	}
 }
