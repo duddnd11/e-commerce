@@ -2,24 +2,33 @@ package kr.hhplus.be.server.application.payment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.BeforeEach;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.application.payment.dto.PaymentCriteria;
 import kr.hhplus.be.server.application.payment.facade.PaymentFacade;
 import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
 import kr.hhplus.be.server.domain.coupon.enums.UserCouponStatus;
 import kr.hhplus.be.server.domain.coupon.repository.UserCouponRepository;
+import kr.hhplus.be.server.domain.order.dto.OrderDetailCommand;
 import kr.hhplus.be.server.domain.order.dto.OrderDiscount;
 import kr.hhplus.be.server.domain.order.entity.Order;
+import kr.hhplus.be.server.domain.order.entity.OrderDetail;
 import kr.hhplus.be.server.domain.order.enums.OrderStatus;
+import kr.hhplus.be.server.domain.order.repository.OrderDetailRepository;
 import kr.hhplus.be.server.domain.order.repository.OrderRepository;
 import kr.hhplus.be.server.domain.payment.entity.Payment;
 import kr.hhplus.be.server.domain.payment.enums.PaymentStatus;
@@ -27,7 +36,9 @@ import kr.hhplus.be.server.domain.product.entity.Product;
 import kr.hhplus.be.server.domain.product.repository.ProductRepository;
 import kr.hhplus.be.server.domain.user.entity.User;
 import kr.hhplus.be.server.domain.user.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @SpringBootTest
 @Testcontainers
 public class PaymentFacadeInterTest {
@@ -45,50 +56,38 @@ public class PaymentFacadeInterTest {
 	UserCouponRepository userCouponRepository;
 	
 	@Autowired
+	OrderDetailRepository orderDetailRepository;
+	
+	@Autowired
 	PaymentFacade paymentFacade;
 	
 	@Autowired
 	EntityManager em;
 	
-	@BeforeEach
-	void clearTables() {
-	    em.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
-	    em.createNativeQuery("TRUNCATE TABLE orders").executeUpdate();
-	    em.createNativeQuery("TRUNCATE TABLE user").executeUpdate();
-	    em.createNativeQuery("TRUNCATE TABLE product").executeUpdate();
-	    em.createNativeQuery("TRUNCATE TABLE user_coupon").executeUpdate();
-	    em.createNativeQuery("TRUNCATE TABLE payment").executeUpdate();
-	    em.createNativeQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();
-	}
-	
 	@Test
 	@DisplayName("결제 성공")
-	@Transactional
-	@Rollback
 	void payment(){
 		// given
 		User user = new User("사용자");
 		user.chargeBalance(2000);
 		userRepository.save(user);
 		
-		Order order = new Order(1L, 1000);
+		Order order = new Order(user.getId(), 1000);
 		orderRepository.save(order);
 		
 		// when
-		PaymentCriteria paymentCriteria = new PaymentCriteria(1L, 1L, 1000);
+		PaymentCriteria paymentCriteria = new PaymentCriteria(user.getId(), order.getId(), 1000);
 		Payment payment = paymentFacade.payment(paymentCriteria);
 		
 		// then
-		assertThat(payment.getOrderId()).isEqualTo(1L);
+		assertThat(payment.getOrderId()).isEqualTo(order.getId());
 		assertThat(payment.getStatus()).isEqualTo(PaymentStatus.COMPLETED);
-		User resultUser = userRepository.findById(1L);
+		User resultUser = userRepository.findById(user.getId());
 		assertThat(resultUser.getBalance()).isEqualTo(1000);
 	}
 	
 	@Test
 	@DisplayName("잔액 부족 결제 실패")
-	@Transactional
-	@Rollback
 	void paymentFail(){
 		// given
 		User user = new User("사용자");
@@ -98,26 +97,94 @@ public class PaymentFacadeInterTest {
 		Product product = new Product("상품", 2000, 300);
 		productRepository.save(product);
 		
-		Order order = new Order(1L, 2000);
+		Order order = new Order(user.getId(), 2000);
 		orderRepository.save(order);
+		
+		OrderDetail orderDetai = new OrderDetail(order.getId(), OrderDetailCommand.of(product.getId(), 10, 2000));
+		orderDetailRepository.save(orderDetai);
 		
 		UserCoupon userCoupon = new UserCoupon(user.getId(), 1L);
 		userCouponRepository.save(userCoupon);
-		OrderDiscount orderDiscount = new OrderDiscount(order.getId(), 1L, 2000);
+		OrderDiscount orderDiscount = new OrderDiscount(order.getId(), userCoupon.getId(), 2000);
 		order.discount(orderDiscount);
 		
 		// when
-		PaymentCriteria paymentCriteria = new PaymentCriteria(1L, 1L, 2000);
-		paymentFacade.payment(paymentCriteria);
+		PaymentCriteria paymentCriteria = new PaymentCriteria(user.getId(), order.getId(), 2000);
+		Payment payment = paymentFacade.payment(paymentCriteria);
 		
 		// then
-		Order resultOrder = orderRepository.findById(1L);
+		assertThat(payment).isEqualTo(null);
+		
+		Order resultOrder = orderRepository.findById(order.getId());
 		assertThat(resultOrder.getStatus()).isEqualTo(OrderStatus.CANCELED);
 		
 		Product resultProduct = productRepository.findById(product.getId());
-		assertThat(resultProduct.getStock()).isEqualTo(300);
+		assertThat(resultProduct.getStock()).isEqualTo(310);
 		
 		UserCoupon resultUserCoupon = userCouponRepository.findById(userCoupon.getId());
 		assertThat(resultUserCoupon.getStatus()).isEqualTo(UserCouponStatus.AVAILABLE);
 	}
+	
+	@Test
+	@DisplayName("결제 동시성 동일 유저 테스트")
+	void paymentConcurrent() throws InterruptedException{
+		// given
+		User user = new User("사용자");
+		user.chargeBalance(2000);
+		userRepository.save(user);
+		
+		Product product1 = new Product("상품1", 1000, 100);
+		productRepository.save(product1);
+		Product product2 = new Product("상품2", 2000, 200);
+		productRepository.save(product2);
+		Product product3 = new Product("상품3", 3000, 300);
+		productRepository.save(product3);
+		
+		Order order1 = new Order(user.getId(), 10000);
+		Order order2 = new Order(user.getId(), 10000);
+		Order order3 = new Order(user.getId(), 9000);
+		orderRepository.save(order1);
+		orderRepository.save(order2);
+		orderRepository.save(order3);
+		
+		OrderDetail orderDetai1 = new OrderDetail(order1.getId(), OrderDetailCommand.of(product1.getId(), 10, 1000));
+		orderDetailRepository.save(orderDetai1);
+		OrderDetail orderDetai2 = new OrderDetail(order2.getId(), OrderDetailCommand.of(product2.getId(), 5, 2000));
+		orderDetailRepository.save(orderDetai2);
+		OrderDetail orderDetai3 = new OrderDetail(order3.getId(), OrderDetailCommand.of(product3.getId(), 3, 3000));
+		orderDetailRepository.save(orderDetai3);
+		
+		List<Order> orders = new ArrayList<Order>();
+		orders.add(order1);
+		orders.add(order2);
+		orders.add(order3);
+		
+		// when
+		int numberOfThread = 3;
+		CountDownLatch countDownLatch = new CountDownLatch(numberOfThread);
+		CyclicBarrier barrier = new CyclicBarrier(numberOfThread);
+		ExecutorService executorService = Executors.newFixedThreadPool(numberOfThread);
+		AtomicInteger failCount = new AtomicInteger();
+		for (int i = 0; i < numberOfThread; i++) {
+			PaymentCriteria paymentCriteria = new PaymentCriteria(user.getId(), orders.get(i).getId(), 1000);
+		    executorService.execute(() -> {
+		        try {
+		            barrier.await();
+		            Payment payment = paymentFacade.payment(paymentCriteria);
+		            if(payment == null) failCount.incrementAndGet();
+		        } catch (Exception e) {
+		            e.printStackTrace();
+				} finally {
+		            countDownLatch.countDown();
+		        }
+		    });
+		}
+		
+		countDownLatch.await();
+		executorService.shutdown();
+
+		// then
+		assertThat(failCount.get()).isEqualTo(2);
+	}
+		
 }
