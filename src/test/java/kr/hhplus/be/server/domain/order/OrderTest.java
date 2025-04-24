@@ -3,6 +3,9 @@ package kr.hhplus.be.server.domain.order;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -71,6 +74,38 @@ public class OrderTest {
 		
 		// when
 		order.discount(orderDiscount);
+		
+		// then
+		assertThat(order.getFinalPrice()).isEqualTo(18000);
+	}
+	
+	@Test
+	@DisplayName("주문 할인 적용 동시성 테스트")
+	void discountConcurrent() throws InterruptedException {
+		// given
+		Order order = new Order(1L, 21000);
+		
+		OrderDiscount orderDiscount = new OrderDiscount(1L, 1L, 3);
+		
+		int numberOfThread = 1000;
+		CountDownLatch countDownLatch = new CountDownLatch(numberOfThread);
+		CyclicBarrier barrier = new CyclicBarrier(numberOfThread);
+		
+		// when
+		for(int i=0; i<numberOfThread; i++) {
+			new Thread(() -> {
+				try {
+	                barrier.await(); // 전부 여기 모일 때까지 대기 → 동시에 출발
+	                order.discount(orderDiscount);
+	            } catch (Exception e) {
+	                e.printStackTrace();
+	            } finally {
+	                countDownLatch.countDown();
+	            }
+            }).start();
+		}
+		
+		countDownLatch.await();
 		
 		// then
 		assertThat(order.getFinalPrice()).isEqualTo(18000);
