@@ -308,7 +308,7 @@ public class OrderFacadeInterTest {
 		userCouponRepository.save(userCoupon);
 		
 		// when
-		int numberOfThread = 2;
+		int numberOfThread = 500;
 		CountDownLatch countDownLatch = new CountDownLatch(numberOfThread);
 		CyclicBarrier barrier = new CyclicBarrier(numberOfThread);
 		ExecutorService executorService = Executors.newFixedThreadPool(numberOfThread);
@@ -323,6 +323,7 @@ public class OrderFacadeInterTest {
 		            barrier.await();
 		            orderFacade.order(orderCriteria);
 		        } catch (IllegalArgumentException e) {
+		        	log.info(e.getMessage());
 		        	failCount.incrementAndGet();
 		        } catch (Exception e) {
 		            e.printStackTrace();
