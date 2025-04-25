@@ -51,4 +51,9 @@ public class UserCoupon {
 		this.status = UserCouponStatus.AVAILABLE;
 		this.updatedAt = LocalDateTime.now();
 	}
+	
+	public void expiration() {
+		this.status = UserCouponStatus.EXPIRED;
+		this.updatedAt = LocalDateTime.now();
+	}
 }

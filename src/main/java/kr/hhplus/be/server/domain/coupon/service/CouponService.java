@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.domain.coupon.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -54,5 +56,14 @@ public class CouponService {
 		}else {
 			return null;
 		}
+	}
+	
+	public List<UserCoupon> getUserCoupons(long userId){
+		List<UserCoupon> userCoupons = userCouponRepository.findAllByUserId(userId);
+		return userCoupons;
+	}
+	
+	public void expire() {
+		userCouponRepository.expire();
 	}
 }
