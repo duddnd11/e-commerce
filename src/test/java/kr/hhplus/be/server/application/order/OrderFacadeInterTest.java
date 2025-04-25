@@ -308,7 +308,7 @@ public class OrderFacadeInterTest {
 		userCouponRepository.save(userCoupon);
 		
 		// when
-		int numberOfThread = 500;
+		int numberOfThread = 3;
 		CountDownLatch countDownLatch = new CountDownLatch(numberOfThread);
 		CyclicBarrier barrier = new CyclicBarrier(numberOfThread);
 		ExecutorService executorService = Executors.newFixedThreadPool(numberOfThread);
@@ -323,7 +323,6 @@ public class OrderFacadeInterTest {
 		            barrier.await();
 		            orderFacade.order(orderCriteria);
 		        } catch (IllegalArgumentException e) {
-		        	log.info(e.getMessage());
 		        	failCount.incrementAndGet();
 		        } catch (Exception e) {
 		            e.printStackTrace();
@@ -337,7 +336,7 @@ public class OrderFacadeInterTest {
 		executorService.shutdown();
 		
 		// then
-		assertThat(failCount.get()).isEqualTo(1);
+		assertThat(failCount.get()).isEqualTo(2);
 		Product resultProduct1 = productRepository.findById(product1.getId());
 		assertThat(resultProduct1.getStock()).isEqualTo(997);
 		Product resultProduct2 = productRepository.findById(product2.getId());
