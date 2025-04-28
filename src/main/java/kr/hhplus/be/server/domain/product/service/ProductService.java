@@ -31,7 +31,7 @@ public class ProductService {
 			if(stockCommand.getProductId() <= 0) {
 				throw new IllegalArgumentException("0 이하의 값을 사용할 수 없습니다.");
 			}
-			Product product = productRepository.findById(stockCommand.getProductId());
+			Product product = productRepository.findByIdForUpdate(stockCommand.getProductId());
 			product.deductStock(stockCommand.getQuantity());
 			productResults.add(ProductResult.of(product.getId(), stockCommand.getQuantity(), product.getPrice()));
 		}
@@ -43,7 +43,7 @@ public class ProductService {
 			if(stockCommand.getProductId() <= 0) {
 				throw new IllegalArgumentException("0 이하의 값을 사용할 수 없습니다.");
 			}
-			Product product = productRepository.findById(stockCommand.getProductId());
+			Product product = productRepository.findByIdForUpdate(stockCommand.getProductId());
 			product.addStock(stockCommand.getQuantity());
 		}
 	}

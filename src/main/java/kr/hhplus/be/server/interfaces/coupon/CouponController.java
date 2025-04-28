@@ -55,7 +55,7 @@ public class CouponController {
 	@Operation(summary = "선착순 쿠폰 발급")
 	@PostMapping("/issue")
 	public ResponseEntity<UserCouponResponse> issueCoupon(@RequestBody CouponRequest couponRequest){
-		UserCoupon userCoupon = couponService.issue(null);
+		UserCoupon userCoupon = couponService.issue(couponRequest.toCouponCommand());
 		return ResponseEntity.ok(UserCouponResponse.from(userCoupon.getId(), userCoupon.getStatus()));
 	}
 }
