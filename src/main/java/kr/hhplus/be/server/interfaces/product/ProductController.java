@@ -1,7 +1,8 @@
 package kr.hhplus.be.server.interfaces.product;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,10 +12,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import kr.hhplus.be.server.application.product.dto.TopSellingProductInfo;
+import kr.hhplus.be.server.application.product.facade.ProductFacade;
 import kr.hhplus.be.server.domain.product.dto.ProductCommand;
 import kr.hhplus.be.server.domain.product.entity.Product;
 import kr.hhplus.be.server.domain.product.service.ProductService;
 import kr.hhplus.be.server.interfaces.product.dto.ProductResponse;
+import kr.hhplus.be.server.interfaces.product.dto.TopSellingProductResponse;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name="Product API", description = "상품 관리 (조회, 상위 상품 조회)")
@@ -24,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductController {
 	
 	private final ProductService productService;
+	private final ProductFacade productFacade;
 
 	/**
 	 * 상품 조회
@@ -43,14 +48,12 @@ public class ProductController {
 	 */
 	@Operation(summary = "최근 상위 5개 상품 조회")
 	@GetMapping("/top")
-	public ResponseEntity<List<ProductResponse>> getTopProductList(){
-		List<ProductResponse> topProductList = new ArrayList<ProductResponse>();
-		topProductList.add(new ProductResponse(1L, "키보드", 50000, 100));
-		topProductList.add(new ProductResponse(2L, "마우스", 20000, 200));
-		topProductList.add(new ProductResponse(3L, "모니터", 70000, 150));
-		topProductList.add(new ProductResponse(4L, "이어폰", 15000, 130));
-		topProductList.add(new ProductResponse(5L, "헤드셋", 200000, 73));
+	public ResponseEntity<List<TopSellingProductResponse>> getTopProductList(){
+		List<TopSellingProductInfo> topProducts = productFacade.topSellingProduct(LocalDateTime.now().minusDays(5));
+		List<TopSellingProductResponse> topProductsResponse = topProducts.stream()
+				.map(tp -> TopSellingProductResponse.from(tp))
+				.collect(Collectors.toList());
 		
-		return ResponseEntity.ok(topProductList);
+		return ResponseEntity.ok(topProductsResponse);
 	}
 }

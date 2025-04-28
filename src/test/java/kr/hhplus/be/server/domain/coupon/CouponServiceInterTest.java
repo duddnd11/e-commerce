@@ -11,13 +11,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import jakarta.persistence.EntityManager;
 import kr.hhplus.be.server.domain.coupon.dto.CouponCommand;
 import kr.hhplus.be.server.domain.coupon.entity.Coupon;
+import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
 import kr.hhplus.be.server.domain.coupon.enums.CouponStatus;
 import kr.hhplus.be.server.domain.coupon.enums.CouponType;
+import kr.hhplus.be.server.domain.coupon.enums.UserCouponStatus;
 import kr.hhplus.be.server.domain.coupon.repository.CouponRepository;
+import kr.hhplus.be.server.domain.coupon.repository.UserCouponRepository;
 import kr.hhplus.be.server.domain.coupon.service.CouponService;
 
 @SpringBootTest
@@ -26,6 +31,12 @@ public class CouponServiceInterTest {
 
 	@Autowired
 	CouponRepository couponRepository;
+	
+	@Autowired
+	UserCouponRepository userCouponRepository;
+	
+	@Autowired
+	EntityManager em;
 	
 	@Autowired
 	CouponService couponService;
@@ -78,5 +89,25 @@ public class CouponServiceInterTest {
 		Coupon resultCoupon = couponRepository.findById(coupon.getId());
 		assertThat(resultCoupon.getIssuedQuantity()).isEqualTo(100);
 		assertThat(resultCoupon.getStatus()).isEqualTo(CouponStatus.SOLD_OUT);
+	}
+	
+	@Test
+	@DisplayName("쿠폰 만료")
+	@Transactional
+	void expire() {
+		Coupon coupon = new Coupon("쿠폰", CouponType.PRICE, 1000, 100);
+		coupon.setExpireAt(-1);
+		couponRepository.save(coupon);
+		
+		UserCoupon userCoupon = new UserCoupon(1L, coupon.getId());
+		userCouponRepository.save(userCoupon);
+		
+		em.flush();
+		em.clear();
+		
+		couponService.expire();
+		
+		UserCoupon resultUserCoupon = userCouponRepository.findById(userCoupon.getId());
+		assertThat(resultUserCoupon.getStatus()).isEqualTo(UserCouponStatus.EXPIRED);
 	}
 }

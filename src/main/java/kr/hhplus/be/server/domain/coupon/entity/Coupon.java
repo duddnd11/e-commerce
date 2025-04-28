@@ -39,12 +39,15 @@ public class Coupon {
 	
 	private LocalDateTime updatedAt;
 	
+	private LocalDateTime expireAt;
+	
 	public Coupon(String name, CouponType type, int value, int quantity) {
 		this.name = name;
 		this.type = type;
 		this.value = value;
 		this.quantity = quantity;
 		this.status = CouponStatus.ISSUABLE;
+		this.createdAt = LocalDateTime.now();
 	}
 	
 	public void issue() {
@@ -56,5 +59,9 @@ public class Coupon {
 		if(this.quantity == this.issuedQuantity) {
 			this.status = CouponStatus.SOLD_OUT;
 		}
+	}
+	
+	public void setExpireAt(long days) {
+		this.expireAt = LocalDateTime.now().plusDays(days);
 	}
 }
