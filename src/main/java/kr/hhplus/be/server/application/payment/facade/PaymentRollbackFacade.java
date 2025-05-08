@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.hhplus.be.server.application.payment.dto.PaymentCriteria;
@@ -26,7 +25,7 @@ public class PaymentRollbackFacade {
 	private final CouponService couponService;
 	private final OrderService orderService;
 	
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	@Transactional
 	public void rollBack(PaymentCriteria paymentCriteria) {
 		OrderResult cancelOrderResult = orderService.cancel(OrderAction.of(paymentCriteria.getOrderId()));
 		

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.application.order.dto.OrderCriteria;
+import kr.hhplus.be.server.common.DistributedLock;
 import kr.hhplus.be.server.domain.coupon.dto.DiscountCommand;
 import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
 import kr.hhplus.be.server.domain.coupon.service.CouponService;
@@ -27,6 +28,7 @@ public class OrderFacade {
 	private final ProductService productService;
 	private final CouponService couponService;
 	
+	@DistributedLock(key="'order:'+#orderCriteria.userId")
 	@Transactional
 	public Order order(OrderCriteria orderCriteria) {
 		// 재고 차감
