@@ -3,6 +3,9 @@ package kr.hhplus.be.server.domain.order.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -17,7 +20,9 @@ import kr.hhplus.be.server.domain.order.entity.OrderDetail;
 import kr.hhplus.be.server.domain.order.repository.OrderDetailRepository;
 import kr.hhplus.be.server.domain.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -61,7 +66,14 @@ public class OrderService {
 		return OrderResult.of(order.getId(), order.getUserCouponId(), orderDetailRepository.findByOrderId(order.getId()));
 	}
 	
+	@Cacheable(value="topSellingProduct", key="'topSellingProduct'")
 	public List<TopSellingProduct> topSellingProduct(LocalDateTime fromDate){
 		return orderDetailRepository.findTopSellingProducts(fromDate);
+	}
+	
+	@Scheduled(cron = "0 0 0 * * *")
+	@CacheEvict(value = "topSellingProduct", key = "'topSellingProduct'")
+	public void topSellingProductEvict() {
+		log.info("인기 상품 캐시 제거");
 	}
 }
