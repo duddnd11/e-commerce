@@ -1,5 +1,8 @@
 package kr.hhplus.be.server.domain.order.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -8,6 +11,7 @@ import kr.hhplus.be.server.domain.order.dto.OrderCommand;
 import kr.hhplus.be.server.domain.order.dto.OrderDetailCommand;
 import kr.hhplus.be.server.domain.order.dto.OrderDiscount;
 import kr.hhplus.be.server.domain.order.dto.OrderResult;
+import kr.hhplus.be.server.domain.order.dto.TopSellingProduct;
 import kr.hhplus.be.server.domain.order.entity.Order;
 import kr.hhplus.be.server.domain.order.entity.OrderDetail;
 import kr.hhplus.be.server.domain.order.repository.OrderDetailRepository;
@@ -55,5 +59,9 @@ public class OrderService {
 		Order order = orderRepository.findById(orderAction.getOrderId());
 		order.cancel();
 		return OrderResult.of(order.getId(), order.getUserCouponId(), orderDetailRepository.findByOrderId(order.getId()));
+	}
+	
+	public List<TopSellingProduct> topSellingProduct(LocalDateTime fromDate){
+		return orderDetailRepository.findTopSellingProducts(fromDate);
 	}
 }

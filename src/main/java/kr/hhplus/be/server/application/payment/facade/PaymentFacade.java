@@ -24,32 +24,6 @@ public class PaymentFacade {
 	private final OrderService orderService;
 	private final PaymentRollbackFacade paymentRollbackFacade;
 	
-	/*
-	@Transactional
-	public Payment payment(PaymentCriteria paymentCriteria) {
-		try{
-			// 유저 잔액 차감
-			userService.useBalance(BalanceCommand.of(paymentCriteria.getUserId(), paymentCriteria.getAmount()));
-			// 결제
-			Payment payment = paymentService.createPayment(PaymentCommand.of(paymentCriteria.getOrderId()));
-			
-			// 주문 완료 처리
-			orderService.orderSuccess(OrderAction.of(paymentCriteria.getOrderId()));
-			return payment;
-		}catch (IllegalArgumentException | ObjectOptimisticLockingFailureException e) {
-			OrderResult cancelOrderResult = orderService.cancel(OrderAction.of(paymentCriteria.getOrderId()));
-			
-			List<StockCommand> stockCommands = cancelOrderResult.getOrderDetails().stream()
-				    .map(od -> StockCommand.of(od.getProductId(), od.getQuantity()))
-				    .collect(Collectors.toList());
-			productService.addStock(stockCommands);
-			
-			couponService.cancel(UserCouponCommand.of(cancelOrderResult.getUserCouponId()));
-			return null;
-		}
-	}
-	 */
-	
 	public Payment payment(PaymentCriteria paymentCriteria){
 		try{
 			return this.pay(paymentCriteria);

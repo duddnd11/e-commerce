@@ -20,13 +20,11 @@ public class UserService {
 	}
 	
 	public User charge(BalanceCommand balanceCommand) {
-		// 동시성
 		User user = userRepository.findById(balanceCommand.getUserId());
 		user.chargeBalance(balanceCommand.getAmount());
 		return user;
 	}
 	
-	@Transactional
 	public User useBalance(BalanceCommand balanceCommand) {
 		User user = userRepository.findById(balanceCommand.getUserId());
 		user.useBalance(balanceCommand.getAmount());

@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.interfaces.coupon;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
-import kr.hhplus.be.server.domain.coupon.enums.CouponType;
-import kr.hhplus.be.server.domain.coupon.enums.UserCouponStatus;
 import kr.hhplus.be.server.domain.coupon.service.CouponService;
 import kr.hhplus.be.server.interfaces.coupon.dto.CouponRequest;
 import kr.hhplus.be.server.interfaces.coupon.dto.UserCouponResponse;
@@ -37,14 +35,11 @@ public class CouponController {
 	@Operation(summary = "유저 보유 쿠폰 목록")
 	@GetMapping("/list/{userId}")
 	public ResponseEntity<List<UserCouponResponse>> getCouponList(@PathVariable("userId") long userId){
-		List<UserCouponResponse> userCouponList = new ArrayList<UserCouponResponse>();
-		
-		userCouponList.add(UserCouponResponse.from(1L, UserCouponStatus.AVAILABLE));
-		userCouponList.add(UserCouponResponse.from(2L, UserCouponStatus.USED));
-		userCouponList.add(UserCouponResponse.from(3L, UserCouponStatus.USED));
-		userCouponList.add(UserCouponResponse.from(4L, UserCouponStatus.AVAILABLE));
-		
-		return ResponseEntity.ok(userCouponList);
+		List<UserCoupon> userCoupons = couponService.getUserCoupons(userId);
+		List<UserCouponResponse> userCouponResponse = userCoupons.stream()
+				.map(uc -> UserCouponResponse.from(uc.getId(), uc.getStatus()))
+				.collect(Collectors.toList());
+		return ResponseEntity.ok(userCouponResponse);
 	}
 	
 	/**
