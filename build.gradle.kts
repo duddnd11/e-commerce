@@ -44,6 +44,10 @@ dependencies {
 
 	// Swagger	
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+    
+    // Redis
+    implementation ("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation ("org.redisson:redisson-spring-boot-starter:3.27.2")
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -56,4 +60,9 @@ dependencies {
 tasks.withType<Test> {
 	useJUnitPlatform()
 	systemProperty("user.timezone", "UTC")
+	jvmArgs("-parameters")
+}
+
+tasks.withType<JavaCompile> {
+    options.compilerArgs.add("-parameters")
 }

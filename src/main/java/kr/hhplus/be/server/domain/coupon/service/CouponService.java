@@ -1,8 +1,11 @@
 package kr.hhplus.be.server.domain.coupon.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import kr.hhplus.be.server.common.DistributedLock;
 import kr.hhplus.be.server.domain.coupon.dto.CouponCommand;
 import kr.hhplus.be.server.domain.coupon.dto.DiscountCommand;
 import kr.hhplus.be.server.domain.coupon.dto.UserCouponCommand;
@@ -29,6 +32,7 @@ public class CouponService {
 		return couponRepository.findById(couponId);
 	}
 	
+	@DistributedLock(key="'coupon:'+#couponCommand.couponId")
 	@Transactional
 	public UserCoupon issue(CouponCommand couponCommand) {
 		Coupon coupon = couponRepository.findByIdForUpdate(couponCommand.getCouponId());
@@ -54,5 +58,14 @@ public class CouponService {
 		}else {
 			return null;
 		}
+	}
+	
+	public List<UserCoupon> getUserCoupons(long userId){
+		List<UserCoupon> userCoupons = userCouponRepository.findAllByUserId(userId);
+		return userCoupons;
+	}
+	
+	public void expire() {
+		userCouponRepository.expire();
 	}
 }
