@@ -25,6 +25,7 @@ public class DistributedLockAop {
 	private static final String REDISSON_LOCK_PREFIX = "LOCK:";
 	
 	private final RedissonClient redissonClient;
+	private final AopForTransaction aopForTransaction;
 	
 	@Around("@annotation(kr.hhplus.be.server.common.DistributedLock)")
     public Object lock(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -33,7 +34,7 @@ public class DistributedLockAop {
         DistributedLock distributedLock = method.getAnnotation(DistributedLock.class);
 		
         String key = REDISSON_LOCK_PREFIX + CustomSpringELParser.getDynamicValue(signature.getParameterNames(), joinPoint.getArgs(), distributedLock.key());
-        RLock rLock = redissonClient.getLock(key);  // (1)
+        RLock rLock = redissonClient.getLock(key);
 		
         boolean available = false;
 		try {
@@ -43,7 +44,7 @@ public class DistributedLockAop {
             if (!available) {
                 return false;
             }
-            return joinPoint.proceed();
+            return aopForTransaction.proceed(joinPoint); 
         } catch (InterruptedException e) {
             throw new InterruptedException();
         } finally {
