@@ -16,9 +16,9 @@ public interface OrderDetailJpaRepository extends JpaRepository<OrderDetail, Lon
 	@Query("SELECT new kr.hhplus.be.server.domain.order.dto.TopSellingProduct(od.productId, SUM(od.quantity)) " +
 		       "FROM OrderDetail od " +
 		       "JOIN Orders o ON od.orderId = o.id " +
-		       "WHERE o.orderAt >= :fromDate " +
+		       "WHERE o.orderAt >= :fromDate AND o.orderAt < :today " +
 		       "GROUP BY od.productId " +
 		       "ORDER BY SUM(od.quantity) DESC")
-	List<TopSellingProduct> findTopSellingProducts(@Param("fromDate") LocalDateTime fromDate);
+	List<TopSellingProduct> findTopSellingProducts(@Param("fromDate") LocalDateTime fromDate, @Param("today") LocalDateTime today);
 
 }
