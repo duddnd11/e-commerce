@@ -25,6 +25,7 @@ import kr.hhplus.be.server.domain.order.dto.OrderDetailCommand;
 import kr.hhplus.be.server.domain.order.entity.Order;
 import kr.hhplus.be.server.domain.order.entity.OrderDetail;
 import kr.hhplus.be.server.domain.order.repository.OrderDetailRepository;
+import kr.hhplus.be.server.domain.order.repository.OrderRedisRepository;
 import kr.hhplus.be.server.domain.order.repository.OrderRepository;
 import kr.hhplus.be.server.domain.order.service.OrderService;
 import kr.hhplus.be.server.domain.product.entity.Product;
@@ -75,8 +76,11 @@ public class ProductFacadeInterTest {
 			orderRepository.save(order);
 			
 			OrderDetailCommand orderDetailCommand = new OrderDetailCommand(i, i*10, 100);
-			OrderDetail orderDetail1 = new OrderDetail(order.getId(), orderDetailCommand);
-			orderDetailRepository.save(orderDetail1);
+			OrderDetail orderDetail = new OrderDetail(order.getId(), orderDetailCommand);
+			orderDetailRepository.save(orderDetail);
+			
+			String key = "product:ranking:"+LocalDate.now().minusDays(1);
+			redisTemplate.opsForZSet().add(key, String.valueOf(orderDetail.getProductId()), orderDetail.getQuantity());
 		}
 		
 		LocalDate from = LocalDate.now().minusDays(5);
@@ -110,7 +114,6 @@ public class ProductFacadeInterTest {
 		verify(orderService, times(1)).topSellingProduct(fromDate);
 		log.info("No cache duration (ms): " + durationNoCache / 1_000_000);
 	    log.info("With cache duration (ms): " + durationWithCache / 1_000_000);
-	    
 		redisTemplate.delete("topSellingProduct::topSellingProduct");
 	}
 }
