@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,6 @@ import kr.hhplus.be.server.domain.order.dto.OrderDetailCommand;
 import kr.hhplus.be.server.domain.order.entity.Order;
 import kr.hhplus.be.server.domain.order.entity.OrderDetail;
 import kr.hhplus.be.server.domain.order.repository.OrderDetailRepository;
-import kr.hhplus.be.server.domain.order.repository.OrderRedisRepository;
 import kr.hhplus.be.server.domain.order.repository.OrderRepository;
 import kr.hhplus.be.server.domain.order.service.OrderService;
 import kr.hhplus.be.server.domain.product.entity.Product;
@@ -65,6 +65,11 @@ public class ProductFacadeInterTest {
 	@DisplayName("상위 상품 조회")
 	void topSellingProducts() {
 		redisTemplate.delete("topSellingProduct::topSellingProduct");
+	    Set<String> keys = redisTemplate.keys("product:ranking:*");
+
+	    if (keys != null && !keys.isEmpty()) {
+	        redisTemplate.delete(keys);
+	    }
 		
 		for(int i=1; i<=10 ;i++) {
 			Product product = new Product("상품"+i,i*100,100);
