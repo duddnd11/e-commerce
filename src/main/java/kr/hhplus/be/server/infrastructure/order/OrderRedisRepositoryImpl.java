@@ -43,20 +43,15 @@ public class OrderRedisRepositoryImpl implements OrderRedisRepository{
 		LocalDate todayMinus = LocalDate.now().minusDays(1);
 		
 		String resultKey = "product:ranking:"+fromDay+"-"+todayMinus;
+		String fromKey = "product:ranking:"+fromDay;
+		List<String> unionKeys = new ArrayList<String>();
 		
-		List<byte[]> unionKeys = new ArrayList<byte[]>();
-		
-		for(LocalDate d=fromDay; !d.isAfter(todayMinus); d=d.plusDays(1)) {
+		for(LocalDate d=fromDay.plusDays(0); !d.isAfter(todayMinus); d=d.plusDays(1)) {
 			String unionKey = "product:ranking:"+d;
-			unionKeys.add(unionKey.getBytes());
+			unionKeys.add(unionKey);
 		}
 		
-		redisTemplate.execute((RedisCallback<Void>) connection -> {
-			RedisZSetCommands zSetCommand = connection.zSetCommands();
-			
-			zSetCommand.zUnionStore(resultKey.getBytes(), unionKeys.toArray(new byte[0][]));
-			return null;
-		});
+		redisTemplate.opsForZSet().unionAndStore(fromKey, unionKeys, resultKey);
 		
 		// 최초 TTL 설정
 		Long expire = redisTemplate.getExpire(resultKey);
