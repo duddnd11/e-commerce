@@ -1,17 +1,20 @@
 package kr.hhplus.be.server.domain.coupon.service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
-import kr.hhplus.be.server.common.DistributedLock;
 import kr.hhplus.be.server.domain.coupon.dto.CouponCommand;
 import kr.hhplus.be.server.domain.coupon.dto.DiscountCommand;
 import kr.hhplus.be.server.domain.coupon.dto.UserCouponCommand;
+import kr.hhplus.be.server.domain.coupon.dto.UserCouponResult;
 import kr.hhplus.be.server.domain.coupon.entity.Coupon;
 import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
 import kr.hhplus.be.server.domain.coupon.enums.CouponType;
+import kr.hhplus.be.server.domain.coupon.repository.CouponRedisRepository;
 import kr.hhplus.be.server.domain.coupon.repository.CouponRepository;
 import kr.hhplus.be.server.domain.coupon.repository.UserCouponRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,24 +24,26 @@ import lombok.RequiredArgsConstructor;
 public class CouponService {
 	private final CouponRepository couponRepository;
 	private final UserCouponRepository userCouponRepository;
+	private final CouponRedisRepository couponRedisRepository;
 	
-	public UserCoupon useCoupon(long userCouponId) {
-		UserCoupon userCoupon = userCouponRepository.findByIdForUpdate(userCouponId);
-		userCoupon.use();
-		return userCouponRepository.save(userCoupon);
+	public UserCoupon useCoupon(CouponCommand couponCommand) {
+		UserCouponResult userCouponResult = couponRedisRepository.use(couponCommand);
+		if(userCouponResult != null) {
+			UserCoupon userCoupon = new UserCoupon(userCouponResult.getUserId(), userCouponResult.getCouponId());
+			userCoupon.use();
+			return userCouponRepository.save(userCoupon);
+		}else {
+			throw new IllegalArgumentException("유저 쿠폰을 찾을 수 없습니다.");
+		}
 	}
 	
 	public Coupon getCoupon(long couponId) {
 		return couponRepository.findById(couponId);
 	}
 	
-	@DistributedLock(key="'coupon:'+#couponCommand.couponId")
 	@Transactional
-	public UserCoupon issue(CouponCommand couponCommand) {
-		Coupon coupon = couponRepository.findByIdForUpdate(couponCommand.getCouponId());
-		coupon.issue();
-		UserCoupon userCoupon = new UserCoupon(couponCommand.getUserId(), couponCommand.getCouponId());
-		return userCouponRepository.save(userCoupon);
+	public UserCouponResult issue(CouponCommand couponCommand) {
+		return couponRedisRepository.issue(couponCommand);
 	}
 	
 	public int calDiscountValue(DiscountCommand discountCommand) {
@@ -60,12 +65,25 @@ public class CouponService {
 		}
 	}
 	
-	public List<UserCoupon> getUserCoupons(long userId){
+	public List<UserCouponResult> getUserCoupons(long userId){
+		List<UserCouponResult> redisUserCoupons = couponRedisRepository.findUserCoupon(userId);
 		List<UserCoupon> userCoupons = userCouponRepository.findAllByUserId(userId);
-		return userCoupons;
+	    List<UserCouponResult> userCouponsResult = userCoupons.stream()
+	            .map(uc -> UserCouponResult.of(uc.getUserId(), uc.getCouponId(), uc.getStatus()))
+	            .collect(Collectors.toList());
+	    
+	    List<UserCouponResult> allResults = new ArrayList<>();
+	    allResults.addAll(userCouponsResult);
+	    allResults.addAll(redisUserCoupons);
+	    
+		return allResults;
 	}
 	
 	public void expire() {
-		userCouponRepository.expire();
+		List<Coupon> expires =couponRepository.findExpire();
+		
+		for(Coupon c : expires) {
+			couponRedisRepository.expire(c.getId());
+		}
 	}
 }
