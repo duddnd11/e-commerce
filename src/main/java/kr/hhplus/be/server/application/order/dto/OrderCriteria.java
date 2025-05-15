@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class OrderCriteria {
 	private long userId;
-	private long userCouponId;
+	private long couponId;
 	private List<OrderDetailCriteria> orderDetails;
 	
 	public OrderCommand toOrderCommand(List<OrderDetailCommand> orderDetailCommands) {

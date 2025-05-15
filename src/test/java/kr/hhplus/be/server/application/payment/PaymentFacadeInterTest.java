@@ -2,19 +2,24 @@ package kr.hhplus.be.server.application.payment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import jakarta.persistence.EntityManager;
@@ -64,9 +69,16 @@ public class PaymentFacadeInterTest {
 	@Autowired
 	EntityManager em;
 	
+	@Autowired
+	RedisTemplate<String, Object> redisTemplate;
+	
 	@Test
 	@DisplayName("결제 성공")
 	void payment(){
+		String key = "product:ranking:"+LocalDate.now();
+		redisTemplate.delete(key);
+		redisTemplate.opsForZSet().removeRange(key, 0, -1);
+		
 		// given
 		User user = new User("사용자");
 		user.chargeBalance(2000);
@@ -74,6 +86,14 @@ public class PaymentFacadeInterTest {
 		
 		Order order = new Order(user.getId(), 1000);
 		orderRepository.save(order);
+		
+		OrderDetailCommand orderDetailCommand = new OrderDetailCommand(1L, 3, 3000);
+		OrderDetail orderDetail = new OrderDetail(order.getId(), orderDetailCommand);
+		orderDetailRepository.save(orderDetail);
+		
+		OrderDetailCommand orderDetailCommand2 = new OrderDetailCommand(2L, 5, 15000);
+		OrderDetail orderDetail2 = new OrderDetail(order.getId(), orderDetailCommand2);
+		orderDetailRepository.save(orderDetail2);
 		
 		// when
 		PaymentCriteria paymentCriteria = new PaymentCriteria(user.getId(), order.getId(), 1000);
@@ -84,6 +104,18 @@ public class PaymentFacadeInterTest {
 		assertThat(payment.getStatus()).isEqualTo(PaymentStatus.COMPLETED);
 		User resultUser = userRepository.findById(user.getId());
 		assertThat(resultUser.getBalance()).isEqualTo(1000);
+		
+		
+		// 스코어 확인
+		Set<TypedTuple<Object>> ranking = redisTemplate.opsForZSet().reverseRangeWithScores(key, 0, 1);
+		Map<Object, Double> result = ranking.stream()
+		        .collect(Collectors.toMap(TypedTuple::getValue, TypedTuple::getScore));
+		assertThat(result)
+		        .containsEntry("1", 3.0)
+		        .containsEntry("2", 5.0);
+		
+		redisTemplate.delete(key);
+		redisTemplate.opsForZSet().removeRange(key, 0, -1);
 	}
 	
 	@Test

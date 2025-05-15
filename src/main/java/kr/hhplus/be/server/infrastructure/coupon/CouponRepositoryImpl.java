@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.infrastructure.coupon;
 
+import java.util.List;
+
 import org.springframework.stereotype.Repository;
 
 import kr.hhplus.be.server.domain.coupon.entity.Coupon;
@@ -24,5 +26,10 @@ public class CouponRepositoryImpl implements CouponRepository{
 	@Override
 	public Coupon findByIdForUpdate(long couponId) {
 		return jpaRepository.findByIdForUpdate(couponId).orElseThrow(() -> new IllegalArgumentException("쿠폰을 찾을 수 없습니다."));
+	}
+
+	@Override
+	public List<Coupon> findExpire() {
+		return jpaRepository.findExpire();
 	}
 }

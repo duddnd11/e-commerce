@@ -13,7 +13,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import kr.hhplus.be.server.domain.coupon.dto.UserCouponResult;
 import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
+import kr.hhplus.be.server.domain.coupon.enums.UserCouponStatus;
+import kr.hhplus.be.server.domain.coupon.repository.CouponRedisRepository;
 import kr.hhplus.be.server.domain.coupon.repository.UserCouponRepository;
 import kr.hhplus.be.server.domain.coupon.service.CouponService;
 
@@ -22,6 +25,9 @@ public class CouponServiceTest {
 	@Mock
 	UserCouponRepository userCouponRepository;
 
+	@Mock
+	CouponRedisRepository couponRedisRepository;
+	
 	@InjectMocks
 	CouponService couponService;
 	
@@ -42,14 +48,23 @@ public class CouponServiceTest {
 		userCoupons.add(userCoupon2);
 		userCoupons.add(userCoupon3);
 		
+		UserCouponResult userCoupon4 = new UserCouponResult(1L,4L,UserCouponStatus.AVAILABLE);
+		UserCouponResult userCoupon5 = new UserCouponResult(1L,5L,UserCouponStatus.AVAILABLE);
+		List<UserCouponResult> redisUserCoupons = new ArrayList<UserCouponResult>();
+		redisUserCoupons.add(userCoupon4);
+		redisUserCoupons.add(userCoupon5);
+		
 		when(userCouponRepository.findAllByUserId(1L)).thenReturn(userCoupons);
+		when(couponRedisRepository.findUserCoupon(1L)).thenReturn(redisUserCoupons);
 		
 		// when
-		List<UserCoupon> resultUserCoupons = couponService.getUserCoupons(1L);
+		List<UserCouponResult> resultUserCoupons = couponService.getUserCoupons(1L);
 		
 		// then
 		assertThat(resultUserCoupons.get(0).getCouponId()).isEqualTo(1L);
 		assertThat(resultUserCoupons.get(1).getCouponId()).isEqualTo(2L);
 		assertThat(resultUserCoupons.get(2).getCouponId()).isEqualTo(3L);
+		assertThat(resultUserCoupons.get(3).getCouponId()).isEqualTo(4L);
+		assertThat(resultUserCoupons.get(4).getCouponId()).isEqualTo(5L);
 	}
 }

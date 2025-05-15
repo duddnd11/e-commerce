@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.application.order.dto.OrderCriteria;
 import kr.hhplus.be.server.common.DistributedLock;
+import kr.hhplus.be.server.domain.coupon.dto.CouponCommand;
 import kr.hhplus.be.server.domain.coupon.dto.DiscountCommand;
 import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
 import kr.hhplus.be.server.domain.coupon.service.CouponService;
@@ -44,11 +45,11 @@ public class OrderFacade {
 		Order order = orderService.createOrder(orderCriteria.toOrderCommand(orderDetailCommands));
 		
 		// 쿠폰 사용
-		if(orderCriteria.getUserCouponId() > 0) {
-			UserCoupon userCoupon = couponService.useCoupon(orderCriteria.getUserCouponId());
+		if(orderCriteria.getCouponId() > 0) {
+			UserCoupon userCoupon = couponService.useCoupon(CouponCommand.of(orderCriteria.getUserId(), orderCriteria.getCouponId()));
 			// 할인금액 계산
 			int discountValue = couponService.calDiscountValue(new DiscountCommand(userCoupon.getCouponId(), order.getTotalPrice()));
-			order = orderService.discount(new OrderDiscount(order.getId(), orderCriteria.getUserCouponId(), discountValue));
+			order = orderService.discount(new OrderDiscount(order.getId(), userCoupon.getId(), discountValue));
 		}
 		
 		return order;
