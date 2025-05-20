@@ -13,7 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
+import kr.hhplus.be.server.domain.coupon.dto.UserCouponResult;
+import kr.hhplus.be.server.domain.coupon.enums.UserCouponStatus;
 import kr.hhplus.be.server.domain.coupon.service.CouponService;
 import kr.hhplus.be.server.interfaces.coupon.dto.CouponRequest;
 import kr.hhplus.be.server.interfaces.coupon.dto.UserCouponResponse;
@@ -35,9 +36,9 @@ public class CouponController {
 	@Operation(summary = "유저 보유 쿠폰 목록")
 	@GetMapping("/list/{userId}")
 	public ResponseEntity<List<UserCouponResponse>> getCouponList(@PathVariable("userId") long userId){
-		List<UserCoupon> userCoupons = couponService.getUserCoupons(userId);
+		List<UserCouponResult> userCoupons = couponService.getUserCoupons(userId);
 		List<UserCouponResponse> userCouponResponse = userCoupons.stream()
-				.map(uc -> UserCouponResponse.from(uc.getId(), uc.getStatus()))
+				.map(uc -> UserCouponResponse.from(uc.getUserId(), uc.getCouponId(), uc.getStatus()))
 				.collect(Collectors.toList());
 		return ResponseEntity.ok(userCouponResponse);
 	}
@@ -50,7 +51,7 @@ public class CouponController {
 	@Operation(summary = "선착순 쿠폰 발급")
 	@PostMapping("/issue")
 	public ResponseEntity<UserCouponResponse> issueCoupon(@RequestBody CouponRequest couponRequest){
-		UserCoupon userCoupon = couponService.issue(couponRequest.toCouponCommand());
-		return ResponseEntity.ok(UserCouponResponse.from(userCoupon.getId(), userCoupon.getStatus()));
+		UserCouponResult userCoupon = couponService.issue(couponRequest.toCouponCommand());
+		return ResponseEntity.ok(UserCouponResponse.from(userCoupon.getUserId(), userCoupon.getCouponId(), UserCouponStatus.AVAILABLE));
 	}
 }

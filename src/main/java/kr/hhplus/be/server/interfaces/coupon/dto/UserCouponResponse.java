@@ -9,12 +9,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserCouponResponse {
-	private long userCouponId;	
-
+	private long userId;
+	private long couponId;
 	private UserCouponStatus status;
 	
-	public static UserCouponResponse from(long userCouponId, UserCouponStatus status) {
-		UserCouponResponse userCouponResponse = new UserCouponResponse(userCouponId, status);
+	public static UserCouponResponse from(long userId, long couponId, UserCouponStatus status) {
+		UserCouponResponse userCouponResponse = new UserCouponResponse(userId, couponId, status);
 		return userCouponResponse;
 	}
 }

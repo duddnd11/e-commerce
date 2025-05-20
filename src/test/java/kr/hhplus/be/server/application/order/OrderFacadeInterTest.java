@@ -16,6 +16,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.test.annotation.Rollback;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import jakarta.persistence.EntityManager;
@@ -57,6 +59,9 @@ public class OrderFacadeInterTest {
 	
 	@Autowired
 	EntityManager em;
+	
+	@Autowired
+	RedisTemplate<String, Object> redisTemplate;
 
 	@Test
 	@DisplayName("주문 성공")
@@ -108,15 +113,15 @@ public class OrderFacadeInterTest {
 		
 		Coupon coupon = new Coupon("쿠폰", CouponType.PRICE, 2000, 100);
 		couponRepository.save(coupon);
-		UserCoupon userCoupon = new UserCoupon(1L, coupon.getId());
-		userCouponRepository.save(userCoupon);
+		redisTemplate.opsForHash().delete("coupon:"+coupon.getId(), 1L);
+		redisTemplate.opsForHash().putIfAbsent("coupon:"+coupon.getId(), 1L, 1);
 		
 		List<OrderDetailCriteria> orderDetails = new ArrayList<OrderDetailCriteria>();
 		OrderDetailCriteria orderDetailCriteria1 = new OrderDetailCriteria(product1.getId(), 10);
 		OrderDetailCriteria orderDetailCriteria2 = new OrderDetailCriteria(product2.getId(), 3);
 		orderDetails.add(orderDetailCriteria1);
 		orderDetails.add(orderDetailCriteria2);
-		OrderCriteria orderCriteria = new OrderCriteria(1L, userCoupon.getId(), orderDetails);
+		OrderCriteria orderCriteria = new OrderCriteria(1L, coupon.getId(), orderDetails);
 		
 		// when
 		Order order = orderFacade.order(orderCriteria);
@@ -141,7 +146,7 @@ public class OrderFacadeInterTest {
 		assertThat(resultProduct1.getStock()).isEqualTo(90);
 		assertThat(resultProduct2.getStock()).isEqualTo(67);
 		
-		UserCoupon resultUserCoupon = userCouponRepository.findById(userCoupon.getId());
+		UserCoupon resultUserCoupon = userCouponRepository.findById(order.getUserCouponId());
 		assertThat(resultUserCoupon.getStatus()).isEqualTo(UserCouponStatus.USED);
 	}
 	
@@ -156,15 +161,15 @@ public class OrderFacadeInterTest {
 		
 		Coupon coupon = new Coupon("쿠폰", CouponType.PERCENT, 23, 100);
 		couponRepository.save(coupon);
-		UserCoupon userCoupon = new UserCoupon(1L, coupon.getId());
-		userCouponRepository.save(userCoupon);
+		redisTemplate.opsForHash().delete("coupon:"+coupon.getId(), 1L);
+		redisTemplate.opsForHash().putIfAbsent("coupon:"+coupon.getId(), 1L, 1);
 		
 		List<OrderDetailCriteria> orderDetails = new ArrayList<OrderDetailCriteria>();
 		OrderDetailCriteria orderDetailCriteria1 = new OrderDetailCriteria(product1.getId(), 10);
 		OrderDetailCriteria orderDetailCriteria2 = new OrderDetailCriteria(product2.getId(), 3);
 		orderDetails.add(orderDetailCriteria1);
 		orderDetails.add(orderDetailCriteria2);
-		OrderCriteria orderCriteria = new OrderCriteria(1L, userCoupon.getId(), orderDetails);
+		OrderCriteria orderCriteria = new OrderCriteria(1L, coupon.getId(), orderDetails);
 		
 		// when
 		Order order = orderFacade.order(orderCriteria);
@@ -189,7 +194,7 @@ public class OrderFacadeInterTest {
 		assertThat(resultProduct1.getStock()).isEqualTo(90);
 		assertThat(resultProduct2.getStock()).isEqualTo(67);
 		
-		UserCoupon resultUserCoupon = userCouponRepository.findById(userCoupon.getId());
+		UserCoupon resultUserCoupon = userCouponRepository.findById(order.getUserCouponId());
 		assertThat(resultUserCoupon.getStatus()).isEqualTo(UserCouponStatus.USED);
 	}
 	
@@ -233,11 +238,7 @@ public class OrderFacadeInterTest {
 		Coupon coupon = new Coupon("쿠폰", CouponType.PRICE, 1000, 100);
 		couponRepository.save(coupon);
 		
-		UserCoupon userCoupon = new UserCoupon(1L, coupon.getId());
-		userCouponRepository.save(userCoupon);
-		userCoupon.use();
-		
-		OrderCriteria orderCriteria = new OrderCriteria(1L, userCoupon.getId(), orderDetails);
+		OrderCriteria orderCriteria = new OrderCriteria(1L, coupon.getId(), orderDetails);
 		
 		// when & then
 		assertThrows(IllegalArgumentException.class, () -> orderFacade.order(orderCriteria));
@@ -303,9 +304,8 @@ public class OrderFacadeInterTest {
 		
 		Coupon coupon = new Coupon("쿠폰", CouponType.PRICE, 1000, 100);
 		couponRepository.save(coupon);
-		
-		UserCoupon userCoupon = new UserCoupon(1L, coupon.getId());
-		userCouponRepository.save(userCoupon);
+		redisTemplate.opsForHash().delete("coupon:"+coupon.getId(), 1L);
+		redisTemplate.opsForHash().put("coupon:"+coupon.getId(), 1L, 1);
 		
 		// when
 		int numberOfThread = 3;
@@ -317,7 +317,7 @@ public class OrderFacadeInterTest {
 		
 		// when
 		for (int i = 0; i < numberOfThread; i++) {
-			OrderCriteria orderCriteria = new OrderCriteria(1L, userCoupon.getId(), orderDetails);
+			OrderCriteria orderCriteria = new OrderCriteria(1L, coupon.getId(), orderDetails);
 		    executorService.execute(() -> {
 		        try {
 		            barrier.await();

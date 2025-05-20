@@ -10,7 +10,7 @@ import lombok.Getter;
 @Getter
 public class OrderRequest {
 	private long userId;
-	private long userCouponId;
+	private long couponId;
 	private List<OrderDetailRequest> orderDetails;
 	
 	public OrderCriteria toOrderCriteria() {
@@ -18,7 +18,7 @@ public class OrderRequest {
 				.map(orderDetail -> orderDetail.toOrderDetailCriteria())
 				.collect(Collectors.toList());
 		
-		OrderCriteria orderCriteria = new OrderCriteria(userId, userCouponId, orderDetailCriterias);
+		OrderCriteria orderCriteria = new OrderCriteria(userId, couponId, orderDetailCriterias);
 		return orderCriteria;
 	}
 }
