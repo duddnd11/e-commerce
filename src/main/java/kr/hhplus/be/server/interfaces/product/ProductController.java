@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.interfaces.product;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,7 +50,8 @@ public class ProductController {
 	@Operation(summary = "최근 상위 5개 상품 조회")
 	@GetMapping("/top")
 	public ResponseEntity<List<TopSellingProductResponse>> getTopProductList(){
-		List<TopSellingProductInfo> topProducts = productFacade.topSellingProduct(LocalDateTime.now().minusDays(5));
+		LocalDate from = LocalDate.now().minusDays(5);
+		List<TopSellingProductInfo> topProducts = productFacade.topSellingProduct(from.atStartOfDay());
 		List<TopSellingProductResponse> topProductsResponse = topProducts.stream()
 				.map(tp -> TopSellingProductResponse.from(tp))
 				.collect(Collectors.toList());

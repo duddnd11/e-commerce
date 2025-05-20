@@ -3,6 +3,9 @@ package kr.hhplus.be.server.domain.order.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -15,15 +18,19 @@ import kr.hhplus.be.server.domain.order.dto.TopSellingProduct;
 import kr.hhplus.be.server.domain.order.entity.Order;
 import kr.hhplus.be.server.domain.order.entity.OrderDetail;
 import kr.hhplus.be.server.domain.order.repository.OrderDetailRepository;
+import kr.hhplus.be.server.domain.order.repository.OrderRedisRepository;
 import kr.hhplus.be.server.domain.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
 	
 	private final OrderRepository orderRepository;
 	private final OrderDetailRepository orderDetailRepository;
+	private final OrderRedisRepository orderRedisRepository;
 	
 	@Transactional
 	public Order createOrder(OrderCommand orderCommand) {
@@ -49,6 +56,14 @@ public class OrderService {
 		order.success();
 	}
 	
+	public void increaseProductScore(long orderId) {
+		// redis rank score 증가
+		List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(orderId);
+		for(OrderDetail orderDetail : orderDetails) {
+			orderRedisRepository.increaseProductScore(orderDetail);
+		}
+	}
+	
 	public Order discount(OrderDiscount orderDiscount) {
 		Order order = orderRepository.findById(orderDiscount.getOrderId());
 		order.discount(orderDiscount);
@@ -61,7 +76,21 @@ public class OrderService {
 		return OrderResult.of(order.getId(), order.getUserCouponId(), orderDetailRepository.findByOrderId(order.getId()));
 	}
 	
+	/*
+	@Cacheable(value="topSellingProduct", key="'topSellingProduct'")
 	public List<TopSellingProduct> topSellingProduct(LocalDateTime fromDate){
 		return orderDetailRepository.findTopSellingProducts(fromDate);
+	}
+	*/
+	
+	@Cacheable(value="topSellingProduct", key="'topSellingProduct'")
+	public List<TopSellingProduct> topSellingProduct(LocalDateTime fromDate){
+		return orderRedisRepository.productRanking(fromDate);
+	}
+	
+	@Scheduled(cron = "0 0 0 * * *")
+	@CacheEvict(value = "topSellingProduct", key = "'topSellingProduct'")
+	public void topSellingProductEvict() {
+		log.info("인기 상품 캐시 제거");
 	}
 }
