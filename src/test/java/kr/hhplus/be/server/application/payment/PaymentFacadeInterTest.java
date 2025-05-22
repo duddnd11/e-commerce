@@ -1,6 +1,8 @@
 package kr.hhplus.be.server.application.payment;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -11,6 +13,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -20,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import jakarta.persistence.EntityManager;
@@ -28,6 +32,7 @@ import kr.hhplus.be.server.application.payment.facade.PaymentFacade;
 import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
 import kr.hhplus.be.server.domain.coupon.enums.UserCouponStatus;
 import kr.hhplus.be.server.domain.coupon.repository.UserCouponRepository;
+import kr.hhplus.be.server.domain.order.DataPlatform;
 import kr.hhplus.be.server.domain.order.dto.OrderDetailCommand;
 import kr.hhplus.be.server.domain.order.dto.OrderDiscount;
 import kr.hhplus.be.server.domain.order.entity.Order;
@@ -71,6 +76,9 @@ public class PaymentFacadeInterTest {
 	
 	@Autowired
 	RedisTemplate<String, Object> redisTemplate;
+	
+	@MockitoBean
+	DataPlatform dataPlatform;
 	
 	@Test
 	@DisplayName("결제 성공")
@@ -116,6 +124,8 @@ public class PaymentFacadeInterTest {
 		
 		redisTemplate.delete(key);
 		redisTemplate.opsForZSet().removeRange(key, 0, -1);
+		
+		verify(dataPlatform, times(1)).send(order.getId());
 	}
 	
 	@Test
@@ -214,7 +224,7 @@ public class PaymentFacadeInterTest {
 		
 		countDownLatch.await();
 		executorService.shutdown();
-
+		
 		// then
 		assertThat(failCount.get()).isEqualTo(2);
 	}
