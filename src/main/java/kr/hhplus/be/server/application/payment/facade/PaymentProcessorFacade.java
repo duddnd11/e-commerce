@@ -31,7 +31,7 @@ public class PaymentProcessorFacade {
 		// 주문 완료 처리
 		orderService.orderSuccess(OrderAction.of(paymentCriteria.getOrderId()));
 		
-		// 주문 완료 event 발행 -> redis 랭킹 반영
+		// 주문 완료 event 발행 -> redis 랭킹 반영, 데이터 플랫폼 전송
 		eventPublisher.publishEvent(new OrderEvent(paymentCriteria.getOrderId()));
 		
 		return payment;

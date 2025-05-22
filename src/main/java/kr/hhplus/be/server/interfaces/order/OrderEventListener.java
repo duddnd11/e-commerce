@@ -16,7 +16,13 @@ public class OrderEventListener {
 	
 	@Async
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-	public void orderEvent(OrderEvent event) {
+	public void increaseProductScore(OrderEvent event) {
 		orderService.increaseProductScore(event.getOrderId());
+	}
+	
+	@Async
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	public void sendDataPlatform(OrderEvent event) {
+		orderService.sendDataPlatform(event.getOrderId());
 	}
 }

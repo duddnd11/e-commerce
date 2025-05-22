@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import kr.hhplus.be.server.domain.order.DataPlatform;
 import kr.hhplus.be.server.domain.order.dto.OrderAction;
 import kr.hhplus.be.server.domain.order.dto.OrderCommand;
 import kr.hhplus.be.server.domain.order.dto.OrderDetailCommand;
@@ -31,6 +32,7 @@ public class OrderService {
 	private final OrderRepository orderRepository;
 	private final OrderDetailRepository orderDetailRepository;
 	private final OrderRedisRepository orderRedisRepository;
+	private final DataPlatform dataPlatform;
 	
 	@Transactional
 	public Order createOrder(OrderCommand orderCommand) {
@@ -76,13 +78,6 @@ public class OrderService {
 		return OrderResult.of(order.getId(), order.getUserCouponId(), orderDetailRepository.findByOrderId(order.getId()));
 	}
 	
-	/*
-	@Cacheable(value="topSellingProduct", key="'topSellingProduct'")
-	public List<TopSellingProduct> topSellingProduct(LocalDateTime fromDate){
-		return orderDetailRepository.findTopSellingProducts(fromDate);
-	}
-	*/
-	
 	@Cacheable(value="topSellingProduct", key="'topSellingProduct'")
 	public List<TopSellingProduct> topSellingProduct(LocalDateTime fromDate){
 		return orderRedisRepository.productRanking(fromDate);
@@ -92,5 +87,10 @@ public class OrderService {
 	@CacheEvict(value = "topSellingProduct", key = "'topSellingProduct'")
 	public void topSellingProductEvict() {
 		log.info("인기 상품 캐시 제거");
+	}
+	
+	public boolean sendDataPlatform(long orderId) {
+		log.info("데이터 플랫폼 전송");
+		return dataPlatform.send(orderId);
 	}
 }
