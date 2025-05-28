@@ -13,20 +13,23 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import jakarta.persistence.EntityManager;
+import kr.hhplus.be.server.TestcontainersConfiguration;
 import kr.hhplus.be.server.application.payment.dto.PaymentCriteria;
 import kr.hhplus.be.server.application.payment.facade.PaymentFacade;
 import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
@@ -51,6 +54,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SpringBootTest
 @Testcontainers
+//@Import(TestcontainersConfiguration.class)
+//@EmbeddedKafka(partitions = 1, topics = "send-payment")
 public class PaymentFacadeInterTest {
 
 	@Autowired
@@ -80,6 +85,14 @@ public class PaymentFacadeInterTest {
 	@MockitoBean
 	DataPlatform dataPlatform;
 	
+    private static final AtomicReference<String> receivedMessage = new AtomicReference<>();
+	
+	@KafkaListener(topics = "send-payment", groupId = "send-payment")
+    public void listen(ConsumerRecord<String, String> record) {
+        receivedMessage.set(record.value());
+        System.out.println("record:"+record.value());
+    }
+
 	@Test
 	@DisplayName("결제 성공")
 	void payment(){
@@ -124,8 +137,8 @@ public class PaymentFacadeInterTest {
 		
 		redisTemplate.delete(key);
 		redisTemplate.opsForZSet().removeRange(key, 0, -1);
-		
-		verify(dataPlatform, times(1)).send(order.getId());
+
+		verify(dataPlatform, times(1)).paymentDataPlatformSend(order.getId());
 	}
 	
 	@Test
