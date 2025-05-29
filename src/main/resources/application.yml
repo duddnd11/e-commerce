@@ -33,3 +33,33 @@ spring:
     redis:
       host: localhost
       port: 6379
+
+---
+spring:
+  kafka:
+    bootstrap-servers: kafka:9094 #${KAFKA_BOOTSTRAP_SERVERS}
+    properties:
+      security.protocol: PLAINTEXT
+      request.timeout.ms: 300000
+      retry.backoff.ms: 60000
+      auto:
+        offset.reset: earliest
+        register.schemas: false
+        create.topics.enable: true
+      use.latest.version: true
+      basic.auth.credentials.source: USER_INFO
+    producer:
+      client-id: ${spring.application.name}
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      retries: 5
+    consumer:
+      group-id: ${spring.application.name}
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
+      properties:
+        enable-auto-commit: false
+        spring.json.trusted.packages: "*"
+    listener:
+      ack-mode: manual
+
