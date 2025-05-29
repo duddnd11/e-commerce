@@ -1,13 +1,10 @@
 package kr.hhplus.be.server;
 
-import java.time.Duration;
-
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -18,11 +15,7 @@ class TestcontainersConfiguration {
 
     public static final MySQLContainer<?> MYSQL_CONTAINER;
     public static final GenericContainer<?> REDIS_CONTAINER;
-    public static final KafkaContainer KAFKA_CONTAINER = new KafkaContainer(
-        DockerImageName.parse("confluentinc/cp-kafka:7.2.1").asCompatibleSubstituteFor("apache/kafka"))
-		    .withExposedPorts(9092)
-		    .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(60)));
-
+    public static final KafkaContainer KAFKA_CONTAINER;
     static {
         MYSQL_CONTAINER = new MySQLContainer<>(DockerImageName.parse("mysql:8.0"))
             .withDatabaseName("hhplus")
@@ -33,6 +26,8 @@ class TestcontainersConfiguration {
         REDIS_CONTAINER = new GenericContainer<>(DockerImageName.parse("redis:7.2.4")).withExposedPorts(6379);
         REDIS_CONTAINER.start();
 
+        KAFKA_CONTAINER = new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"))
+            .withEnv("KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE", "true");
         KAFKA_CONTAINER.start();
     }
 
