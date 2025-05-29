@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import kr.hhplus.be.server.domain.coupon.CouponEvent;
 import kr.hhplus.be.server.domain.coupon.dto.CouponCommand;
 import kr.hhplus.be.server.domain.coupon.dto.DiscountCommand;
 import kr.hhplus.be.server.domain.coupon.dto.UserCouponCommand;
@@ -25,6 +27,8 @@ public class CouponService {
 	private final CouponRepository couponRepository;
 	private final UserCouponRepository userCouponRepository;
 	private final CouponRedisRepository couponRedisRepository;
+	private final ApplicationEventPublisher eventPublisher;
+	private final CouponEvent couponEvent;
 	
 	public UserCoupon useCoupon(CouponCommand couponCommand) {
 		UserCouponResult userCouponResult = couponRedisRepository.use(couponCommand);
@@ -43,7 +47,19 @@ public class CouponService {
 	
 	@Transactional
 	public UserCouponResult issue(CouponCommand couponCommand) {
-		return couponRedisRepository.issue(couponCommand);
+		UserCouponResult userCouponResult = couponRedisRepository.issue(couponCommand);
+		eventPublisher.publishEvent(couponCommand);
+		return userCouponResult;
+	}
+	
+	public void issuEvent(CouponCommand couponCommand) {
+		couponEvent.couponIssue(couponCommand);
+	}
+	
+	public void saveUserCoupon(CouponCommand couponCommand) {
+		System.out.println("saveUserCoupon");
+		UserCoupon userCoupon = new UserCoupon(couponCommand.getUserId(), couponCommand.getCouponId());
+		userCouponRepository.save(userCoupon);
 	}
 	
 	public int calDiscountValue(DiscountCommand discountCommand) {
