@@ -1,7 +1,5 @@
 package kr.hhplus.be.server;
 
-
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.TimeUnit;
@@ -15,21 +13,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import io.netty.handler.timeout.TimeoutException;
 
 @SpringBootTest
-@Testcontainers
-@ActiveProfiles("test")
+@Testcontainers 
+//@ActiveProfiles("test")
 public class KafkaTest {
 	private static final String TEST_TOPIC = "test-topic";
     private static final AtomicReference<String> receivedMessage = new AtomicReference<>();
 
     @Autowired
-    private KafkaTemplate<String, Object> kafkaTemplate;
+    private KafkaTemplate<String, String> kafkaTemplate;
     
     @KafkaListener(topics = TEST_TOPIC, groupId = "test-group")
     public void listen(ConsumerRecord<String, String> record) {
@@ -38,7 +35,6 @@ public class KafkaTest {
     
     @BeforeAll
     static void beforeAll() {
-    	TestcontainersConfiguration.KAFKA_CONTAINER.start();
     	System.out.println("MYSQL_CONTAINER running: " + TestcontainersConfiguration.MYSQL_CONTAINER.isRunning());
     	System.out.println("REDIS_CONTAINER running: " + TestcontainersConfiguration.REDIS_CONTAINER.isRunning());
         System.out.println("KafkaContainer running: " + TestcontainersConfiguration.KAFKA_CONTAINER.isRunning());
