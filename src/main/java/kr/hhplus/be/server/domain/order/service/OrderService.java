@@ -89,8 +89,8 @@ public class OrderService {
 		log.info("인기 상품 캐시 제거");
 	}
 	
-	public boolean sendDataPlatform(long orderId) {
+	public void sendDataPlatform(long orderId) {
 		log.info("데이터 플랫폼 전송");
-		return dataPlatform.send(orderId);
+		dataPlatform.paymentDataPlatformSend(orderId);
 	}
 }
