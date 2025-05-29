@@ -48,7 +48,9 @@ public class CouponService {
 	@Transactional
 	public UserCouponResult issue(CouponCommand couponCommand) {
 		UserCouponResult userCouponResult = couponRedisRepository.issue(couponCommand);
-		eventPublisher.publishEvent(couponCommand);
+		if(userCouponResult != null) {
+			eventPublisher.publishEvent(couponCommand);
+		}
 		return userCouponResult;
 	}
 	
