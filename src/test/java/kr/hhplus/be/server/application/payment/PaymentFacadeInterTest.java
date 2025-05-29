@@ -13,7 +13,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -124,8 +123,8 @@ public class PaymentFacadeInterTest {
 		
 		redisTemplate.delete(key);
 		redisTemplate.opsForZSet().removeRange(key, 0, -1);
-		
-		verify(dataPlatform, times(1)).send(order.getId());
+
+		verify(dataPlatform, times(1)).paymentDataPlatformSend(order.getId());
 	}
 	
 	@Test

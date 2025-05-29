@@ -27,9 +27,37 @@ spring.config.activate.on-profile: local, test
 spring:
   datasource:
     url: jdbc:mysql://localhost:3305/hhplus?characterEncoding=UTF-8&serverTimezone=UTC
-    username: root
-    password: 1234
+    username: application
+    password: application
   data:
     redis:
       host: localhost
       port: 6379
+      
+  kafka:
+    bootstrap-servers: kafka:9092
+    properties:
+      request.timeout.ms: 20000
+      retry.backoff.ms: 500
+      auto:
+        create.topics.enable: false
+        register.schemas: false
+        offset.reset: latest
+        use.latest.version: true
+        basic.auth.credentials.source: USER_INFO
+    producer:
+      client-id: hhplus-service-producer
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      retries: 5
+    consumer:
+      group-id: hhplus-service-consumer
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+    listener:
+      ack-mode: manual
+
+      
+    
+
