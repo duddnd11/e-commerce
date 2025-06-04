@@ -42,6 +42,7 @@ public class CouponRedisRepositoryImpl implements CouponRedisRepository{
 			if(coupon == null) {
 				log.info("실패:"+couponCommand.getUserId());
 				redisTemplate.opsForHash().delete(couponKey, couponCommand.getUserId());
+				return null;
 			}else {
 				redisTemplate.opsForHash().putIfAbsent(userCouponKey, couponCommand.getCouponId(), 1);
 			}
