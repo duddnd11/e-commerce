@@ -1,11 +1,11 @@
 package kr.hhplus.be.server.infrastructure.coupon;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
 import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
-import kr.hhplus.be.server.domain.coupon.enums.UserCouponStatus;
 import kr.hhplus.be.server.domain.coupon.repository.UserCouponRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -42,6 +42,11 @@ public class UserCouponRepositoryImpl implements UserCouponRepository{
 	@Override
 	public void expire() {
 		jpaRepository.expire();
+	}
+
+	@Override
+	public Optional<UserCoupon> findByUserIdAndCouponId(Long userId, Long couponId) {
+		return jpaRepository.findByUserIdAndCouponId(userId, couponId);
 	}
 
 }

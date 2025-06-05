@@ -29,6 +29,7 @@ public class CouponRedisRepositoryImpl implements CouponRedisRepository{
 		// 쿠폰 재고 검증
 		Long couponStock = redisTemplate.opsForList().size(couponStockKey);
 		if(couponStock == null || couponStock <=0) {
+			log.info("쿠폰 수량 부족");
 			return null;
 		}
 		

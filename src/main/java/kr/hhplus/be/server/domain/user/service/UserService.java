@@ -19,6 +19,7 @@ public class UserService {
 		return userRepository.findById(userId);
 	}
 	
+	@Transactional
 	public User charge(BalanceCommand balanceCommand) {
 		User user = userRepository.findById(balanceCommand.getUserId());
 		user.chargeBalance(balanceCommand.getAmount());
