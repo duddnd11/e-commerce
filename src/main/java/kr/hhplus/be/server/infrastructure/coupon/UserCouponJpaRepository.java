@@ -27,4 +27,6 @@ public interface UserCouponJpaRepository extends JpaRepository<UserCoupon, Long>
 			+ "WHERE uc.couponId IN (SELECT c.id FROM Coupon c WHERE c.expireAt < CURRENT_TIMESTAMP ) "
 			+ "AND uc.status='AVAILABLE'")
 	void expire();
+	
+	Optional<UserCoupon> findByUserIdAndCouponId(Long userId, Long couponId);	
 }
