@@ -1,7 +1,36 @@
 version: '3'
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app
+    depends_on: [mysql, redis, kafka]
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/hhplus?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: application
+      SPRING_DATASOURCE_PASSWORD: application
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    ports:
+      - "8080:8080"
+    networks:
+      - eknetwork
+      
+  redis:
+    image: redis:latest
+    container_name: redis
+    volumes:
+      - ./redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - eknetwork
+      
   mysql:
     image: mysql:8.0
+    container_name: mysql
     ports:
       - "3305:3306"
     environment:
@@ -11,6 +40,8 @@ services:
       - MYSQL_DATABASE=hhplus
     volumes:
       - ./data/mysql/:/var/lib/mysql
+    networks:
+      - eknetwork
 
   kafka:
     image: bitnami/kafka:latest
@@ -28,6 +59,8 @@ services:
       KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@localhost:9093
+    networks:
+      - eknetwork
       
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -43,7 +76,7 @@ services:
       - kafka
     
 networks:
-  default:
+  eknetwork:
     driver: bridge
     
     

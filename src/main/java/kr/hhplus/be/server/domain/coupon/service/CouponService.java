@@ -2,9 +2,11 @@ package kr.hhplus.be.server.domain.coupon.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -20,7 +22,9 @@ import kr.hhplus.be.server.domain.coupon.repository.CouponRedisRepository;
 import kr.hhplus.be.server.domain.coupon.repository.CouponRepository;
 import kr.hhplus.be.server.domain.coupon.repository.UserCouponRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CouponService {
@@ -60,8 +64,15 @@ public class CouponService {
 	
 	public void saveUserCoupon(CouponCommand couponCommand) {
 		System.out.println("saveUserCoupon");
-		UserCoupon userCoupon = new UserCoupon(couponCommand.getUserId(), couponCommand.getCouponId());
-		userCouponRepository.save(userCoupon);
+		try {
+			Optional<UserCoupon> exists = userCouponRepository.findByUserIdAndCouponId(couponCommand.getUserId(), couponCommand.getCouponId());
+			if (exists.isEmpty()) {
+			    UserCoupon userCoupon = new UserCoupon(couponCommand.getUserId(), couponCommand.getCouponId());
+			    userCouponRepository.save(userCoupon);
+			}
+		} catch (DataIntegrityViolationException e) {
+		    log.info("중복 쿠폰 저장 시도: userId={}, couponId={}", couponCommand.getUserId(), couponCommand.getCouponId());
+		}
 	}
 	
 	public int calDiscountValue(DiscountCommand discountCommand) {

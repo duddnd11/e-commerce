@@ -56,6 +56,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
 	testImplementation("org.testcontainers:junit-jupiter")
+    testCompileOnly ("org.projectlombok:lombok")
+    testAnnotationProcessor ("org.projectlombok:lombok")
 	testImplementation("org.testcontainers:mysql")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.springframework.kafka:spring-kafka-test")
@@ -65,7 +67,6 @@ dependencies {
 tasks.withType<Test> {
 	useJUnitPlatform()
 	systemProperty("user.timezone", "UTC")
-	jvmArgs("-parameters")
 }
 
 tasks.withType<JavaCompile> {
