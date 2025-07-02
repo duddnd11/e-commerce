@@ -2,28 +2,40 @@ package kr.hhplus.be.server.domain.coupon;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
-import java.util.Set;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.test.EmbeddedKafkaBroker;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import jakarta.persistence.EntityManager;
+import kr.hhplus.be.server.TestcontainersConfiguration;
 import kr.hhplus.be.server.domain.coupon.dto.CouponCommand;
-import kr.hhplus.be.server.domain.coupon.dto.UserCouponResult;
 import kr.hhplus.be.server.domain.coupon.entity.Coupon;
 import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
 import kr.hhplus.be.server.domain.coupon.enums.CouponType;
-import kr.hhplus.be.server.domain.coupon.enums.UserCouponStatus;
 import kr.hhplus.be.server.domain.coupon.repository.CouponRepository;
 import kr.hhplus.be.server.domain.coupon.repository.UserCouponRepository;
 import kr.hhplus.be.server.domain.coupon.service.CouponService;
@@ -32,8 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SpringBootTest
 @Testcontainers
-public class CouponServiceInterTest {
-
+public class CouponServiceInterTest extends TestcontainersConfiguration {
 	@Autowired
 	CouponRepository couponRepository;
 	
@@ -51,7 +62,7 @@ public class CouponServiceInterTest {
 	
 	@Test
 	@DisplayName("쿠폰 발급 테스트")
-	void issue() {
+	void issue() throws JsonProcessingException {
 		Coupon coupon = new Coupon("쿠폰1", CouponType.PRICE, 1000, 100);
 		couponRepository.save(coupon);
 		redisTemplate.delete("coupon:"+coupon.getId());
@@ -61,7 +72,8 @@ public class CouponServiceInterTest {
 	        redisTemplate.opsForList().rightPush(key, "coupon");
 	    }
 		
-		couponService.issue(CouponCommand.of(1L, coupon.getId()));
+	    CouponCommand couponCommand = CouponCommand.of(1L, coupon.getId()); 
+		couponService.issue(couponCommand);
 
 		Long issuedCount = redisTemplate.opsForHash().size("coupon:"+coupon.getId());
 		Long couponStock = redisTemplate.opsForList().size("coupon:stock:" + coupon.getId());
@@ -70,6 +82,10 @@ public class CouponServiceInterTest {
 		assertThat(couponStock).isEqualTo(99);
 		redisTemplate.delete("coupon:"+coupon.getId());
 		redisTemplate.delete("coupon:stock:"+coupon.getId());
+		
+		// 카프카 consume 후 DB 저장된 유저 쿠폰 확인
+		Optional<UserCoupon> savedUserCoupon = userCouponRepository.findByUserIdAndCouponId(1L, coupon.getId());
+		assertThat(savedUserCoupon).isNotNull();
 	}
 	
 	/**
