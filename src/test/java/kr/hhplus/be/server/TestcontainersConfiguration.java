@@ -11,7 +11,7 @@ import org.testcontainers.utility.DockerImageName;
 import jakarta.annotation.PreDestroy;
 
 @Configuration
-class TestcontainersConfiguration {
+public class TestcontainersConfiguration {
 
     public static final MySQLContainer<?> MYSQL_CONTAINER;
     public static final GenericContainer<?> REDIS_CONTAINER;

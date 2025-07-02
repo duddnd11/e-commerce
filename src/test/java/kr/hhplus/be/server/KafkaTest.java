@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 
@@ -20,8 +21,8 @@ import io.netty.handler.timeout.TimeoutException;
 
 @SpringBootTest
 @Testcontainers 
-//@ActiveProfiles("test")
-public class KafkaTest {
+@ActiveProfiles("test")
+public class KafkaTest{
 	private static final String TEST_TOPIC = "test-topic";
     private static final AtomicReference<String> receivedMessage = new AtomicReference<>();
 
