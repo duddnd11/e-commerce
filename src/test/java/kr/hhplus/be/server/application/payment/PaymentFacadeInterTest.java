@@ -26,6 +26,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import jakarta.persistence.EntityManager;
+import kr.hhplus.be.server.TestcontainersConfiguration;
 import kr.hhplus.be.server.application.payment.dto.PaymentCriteria;
 import kr.hhplus.be.server.application.payment.facade.PaymentFacade;
 import kr.hhplus.be.server.domain.coupon.entity.UserCoupon;
@@ -50,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SpringBootTest
 @Testcontainers
-public class PaymentFacadeInterTest {
+public class PaymentFacadeInterTest extends TestcontainersConfiguration{
 
 	@Autowired
 	OrderRepository orderRepository;

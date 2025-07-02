@@ -21,6 +21,7 @@ import org.springframework.test.annotation.Rollback;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import jakarta.persistence.EntityManager;
+import kr.hhplus.be.server.TestcontainersConfiguration;
 import kr.hhplus.be.server.application.order.dto.OrderCriteria;
 import kr.hhplus.be.server.application.order.dto.OrderDetailCriteria;
 import kr.hhplus.be.server.application.order.facade.OrderFacade;
@@ -40,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @SpringBootTest
 @Testcontainers
 @Slf4j
-public class OrderFacadeInterTest {
+public class OrderFacadeInterTest extends TestcontainersConfiguration{
 	
 	@Autowired
 	ProductRepository productRepository;

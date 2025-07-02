@@ -20,6 +20,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import jakarta.persistence.EntityManager;
+import kr.hhplus.be.server.TestcontainersConfiguration;
 import kr.hhplus.be.server.application.product.dto.TopSellingProductInfo;
 import kr.hhplus.be.server.application.product.facade.ProductFacade;
 import kr.hhplus.be.server.domain.order.dto.OrderDetailCommand;
@@ -36,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SpringBootTest
 @Testcontainers
-public class ProductFacadeInterTest {
+public class ProductFacadeInterTest extends TestcontainersConfiguration{
 	@Autowired
 	OrderRepository orderRepository;
 	
