@@ -1,4 +1,4 @@
-## E-commerce 프로젝트
+# E-commerce 프로젝트
 
 ## 프로젝트 설계
 - [마일스톤](https://github.com/users/duddnd11/projects/3/views/3)
